@@ -38,6 +38,10 @@ cargo new add_one --lib
 为了在顶层 add 目录运行二进制 crate，可以通过 -p 参数和包名称来运行 cargo run 指定工作空间中我们希望使用的包
 ```shell
  cargo run -p adder
+ 
+# 添加参数
+ cargo run -p cli-tool --  example
+
 ```
 
 测试
