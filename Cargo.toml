@@ -3,5 +3,5 @@
 members = [
     "cli-tool",
     "blocklang-installer",
-    "hello"
+    "md5"
 ]

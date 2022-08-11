@@ -481,7 +481,7 @@ mod tests {
 
     #[test]
     fn test_mock() {
-        let mock = mock("POST", "/hello")
+        let mock = mock("POST", "/md5")
             .with_header("Content-Type", "application/json")
             .with_status(201)
             .create();
@@ -490,7 +490,7 @@ mod tests {
         map.insert("lang", "rust");
 
         let client = reqwest::Client::new();
-        client.post(&format!("{}/hello", &get_root_url())).json(&map).send().unwrap();
+        client.post(&format!("{}/md5", &get_root_url())).json(&map).send().unwrap();
 
         mock.assert();
     }

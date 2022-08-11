@@ -1,0 +1,1 @@
+cargo run --bin md5 D:\Documents\Windows11.iso
