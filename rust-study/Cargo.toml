@@ -2,5 +2,6 @@
 
 members = [
     "study",
-    "libs"
+    "libs",
+    "web_app"
 ]
