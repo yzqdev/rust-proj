@@ -3,5 +3,7 @@
 members = [
     "study",
     "libs",
+    "mini",
+    "rcli",
     "web_app"
 ]
