@@ -1,22 +1,39 @@
+mod util;
+
 use std::fs;
+use std::time::SystemTime;
 
 fn main() {
-    let pattern =  std::env::args().nth(1).expect("no pattern given");
-    println!("{}",pattern+"hhh" );
-    read_file();
+    let pattern = std::env::args().nth(1).expect("no pattern given");
+    println!("{}", pattern + "hhh");
+
     println!("Hello, world!");
-    let mut str=String::from("hello");
+    let mut str = String::from("hello");
     str.push_str("niuew");
-    println!("{str}")
+    println!("{str}");
+    util::file_opera::read_file()
 }
 
-fn read_file(){
-    let file_path="Cargo.toml";
-    // --snip--
-    println!("In file {}", file_path);
-
-    let contents = fs::read_to_string(file_path)
-        .expect("Should have been able to read the file");
-
-    println!("With text:\n{contents}");
+mod c
+{
+    pub fn c()
+    {
+        println!("C is a structured programming language");
+    }
 }
+
+mod cplus
+{
+    pub fn cplus()
+    {
+        println!("C++ is an object-oriented programming language");
+    }
+}
+
+fn modules()
+{
+    c::c();
+    cplus::cplus();
+}
+//更多请阅读：https://www.yiibai.com/rust/rust-modules.html
+
