@@ -9,6 +9,9 @@ async function greet() {
   // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
   greetMsg.value = await invoke("greet", { name: name.value });
 }
+async function hello( ) {
+  greetMsg.value=await invoke("hello",{name:"bbbbbbbbbbbbbbbb"})
+}
 </script>
 
 <template>
@@ -18,4 +21,5 @@ async function greet() {
   </div>
 
   <p>{{ greetMsg }}</p>
+  <button @click="hello()">hello</button>
 </template>
