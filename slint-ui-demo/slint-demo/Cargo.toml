@@ -15,10 +15,10 @@ path = "main.rs"
 name = "hello"
 
 [dependencies]
-slint = "0.3.5"
+slint = "1.2.0"
 
 [build-dependencies]
-slint-build = "0.3.5"
+slint-build = "1.2.0"
 # Remove the `#wasm#` to uncomment the wasm build.
 # This is commented out by default because we don't want to build it as a library by default
 # The CI has a script that does sed "s/#wasm# //" to generate the wasm build.
