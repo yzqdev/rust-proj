@@ -1,9 +1,10 @@
 [workspace]
-
+resolver = "2"
 members = [
     "study",
     "libs",
     "mini",
     "rcli",
-    "web_app"
+    "web_app",
+    "basic"
 ]
