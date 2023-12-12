@@ -14,26 +14,19 @@ fn main() {
     util::file_opera::read_file()
 }
 
-mod c
-{
-    pub fn c()
-    {
+mod c {
+    pub fn c() {
         println!("C is a structured programming language");
     }
 }
 
-mod cplus
-{
-    pub fn cplus()
-    {
+mod cplus {
+    pub fn cplus() {
         println!("C++ is an object-oriented programming language");
     }
 }
 
-fn modules()
-{
+fn modules() {
     c::c();
     cplus::cplus();
 }
-//更多请阅读：https://www.yiibai.com/rust/rust-modules.html
-

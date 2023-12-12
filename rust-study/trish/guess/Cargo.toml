@@ -1,5 +1,5 @@
 [package]
-name = "mini"
+name = "guess"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,3 +7,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.4.11", features = ["derive", "cargo"] }
+md-5 = "0.10.6"
+rand = "0.8.5"
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { version = "1", features = ["full"] }

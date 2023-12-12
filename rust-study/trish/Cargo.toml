@@ -6,5 +6,7 @@ members = [
     "mini",
     "rcli",
     "web_app",
-    "basic"
+    "basic",
+    "mini_web",
+    "guess"
 ]

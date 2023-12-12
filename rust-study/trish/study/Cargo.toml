@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 md-5 = "0.10.5"
+clap = { version = "4.4.11", features = ["derive", "cargo"] }
