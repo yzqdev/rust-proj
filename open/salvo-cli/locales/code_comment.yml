@@ -1,0 +1,513 @@
+_version: 2
+main_log_message:
+  en: At the same time, logs are only output to the terminal or file
+  zh_CN: 同一时间，日志只输出到终端或文件
+  zh_TW: 同一時間，日誌只輸出到終端或文件
+  fr: En même temps, les journaux ne sont sortis que vers le terminal ou le fichier
+  ja: 同時に、ログはターミナルまたはファイルにのみ出力されます
+  es: Al mismo tiempo, los registros solo se envían a la terminal o al archivo
+  de: Gleichzeitig werden Protokolle nur auf das Terminal oder die Datei ausgegeben
+  ru: В то же время журналы выводятся только в терминал или файл
+  it: Allo stesso tempo, i log vengono inviati solo al terminale o al file
+  pt: Ao mesmo tempo, os logs são enviados apenas para o terminal ou arquivo
+  ko: 동시에 로그는 터미널 또는 파일로만 출력됩니다
+  no: Samtidig blir logger bare sendt til terminalen eller filen
+  is: Á sama tíma eru skráarstofur aðeins sendar til endastöðvarinnar eða skráarinnar
+  uk: У той же час журнали виводяться тільки в термінал або файл
+  th: ในเวลาเดียวกันบันทึกจะถูกส่งออกไปที่เทอร์มินัลหรือไฟล์เท่านั้น
+  el: Ταυτόχρονα, τα αρχεία καταγραφής εξάγονται μόνο στο τερματικό ή στο αρχείο
+  da: Samtidig sendes logfiler kun til terminalen eller filen
+config_error_no_exits:
+  en: Configuration file does not exist:{},error message:{}
+  zh_CN: 配置文件不存在:{},错误信息:{}
+  zh_TW: 配置文件不存在:{},錯誤信息:{}
+  fr: Le fichier de configuration n'existe pas:{}, message d'erreur:{}
+  ja: 設定ファイルが存在しません:{},エラーメッセージ:{}
+  es: El archivo de configuración no existe:{}, mensaje de error:{}
+  de: Die Konfigurationsdatei existiert nicht:{}, Fehlermeldung:{}
+  ru: Файл конфигурации не существует:{}, сообщение об ошибке:{}
+  it: Il file di configurazione non esiste:{}, messaggio di errore:{}
+  pt: O arquivo de configuração não existe:{}, mensagem de erro:{}
+  ko: 구성 파일이 없습니다:{}, 오류 메시지:{}
+  no: Konfigurasjonsfilen eksisterer ikke:{}, feilmelding:{}
+  is: Stillingaskráin er ekki til:{}, villuboð:{}
+  uk: Файл конфігурації не існує:{}, повідомлення про помилку:{}
+  th: ไม่มีไฟล์กำหนดค่า:{}, ข้อความผิดพลาด:{}
+  el: Το αρχείο ρυθμίσεων δεν υπάρχει:{}, μήνυμα σφάλματος:{}
+  da: Konfigurationsfilen findes ikke:{}, fejlmeddelelse:{}
+config_error_read:
+  en: Failed to read configuration file, error message:{}
+  zh_CN: 读取配置文件失败,错误信息:{}
+  zh_TW: 讀取配置文件失敗,錯誤信息:{}
+  fr: Échec de la lecture du fichier de configuration, message d'erreur:{}
+  ja: 設定ファイルの読み取りに失敗しました。エラーメッセージ:{}
+  es: Error al leer el archivo de configuración, mensaje de error:{}
+  de: Fehler beim Lesen der Konfigurationsdatei, Fehlermeldung:{}
+  ru: Ошибка чтения файла конфигурации, сообщение об ошибке:{}
+  it: Impossibile leggere il file di configurazione, messaggio di errore:{}
+  pt: Falha ao ler o arquivo de configuração, mensagem de erro:{}
+  ko: 구성 파일을 읽는 데 실패했습니다. 오류 메시지:{}
+  no: Kunne ikke lese konfigurasjonsfilen, feilmelding:{}
+  is: Tókst ekki að lesa stillingaskrá, villuboð:{}
+  uk: Не вдалося прочитати файл конфігурації, повідомлення про помилку:{}
+  th: ไม่สามารถอ่านไฟล์กำหนดค่าได้ ข้อความผิดพลาด:{}
+  el: Απέτυχε η ανάγνωση του αρχείου ρυθμίσεων, μήνυμα σφάλματος:{}
+  da: Kunne ikke læse konfigurationsfilen, fejlmeddelelse:{}
+config_error_parse:
+  en: Failed to parse configuration file, error message:{}
+  zh_CN: 解析配置文件失败,错误信息:{}
+  zh_TW: 解析配置文件失敗,錯誤信息:{}
+  fr: Échec de l'analyse du fichier de configuration, message d'erreur:{}
+  ja: 設定ファイルの解析に失敗しました。エラーメッセージ:{}
+  es: Error al analizar el archivo de configuración, mensaje de error:{}
+  de: Fehler beim Analysieren der Konfigurationsdatei, Fehlermeldung:{}
+  ru: Ошибка анализа файла конфигурации, сообщение об ошибке:{}
+  it: Impossibile analizzare il file di configurazione, messaggio di errore:{}
+  pt: Falha ao analisar o arquivo de configuração, mensagem de erro:{}
+  ko: 구성 파일을 구문 분석하는 데 실패했습니다. 오류 메시지:{}
+  no: Kunne ikke analysere konfigurasjonsfilen, feilmelding:{}
+  is: Tókst ekki að greina stillingaskrá, villuboð:{}
+  uk: Не вдалося проаналізувати файл конфігурації, повідомлення про помилку:{}
+  th: ไม่สามารถแยกวิเคราะห์ไฟล์กำหนดค่าได้ ข้อความผิดพลาด:{}
+  el: Απέτυχε η ανάλυση του αρχείου ρυθμίσεων, μήνυμα σφάλματος:{}
+  da: Kunne ikke analysere konfigurationsfilen, fejlmeddelelse:{}
+config_error_read_failed:
+  en: failed to read file
+  zh_CN: 读取文件失败
+  zh_TW: 讀取文件失敗
+  fr: échec de la lecture du fichier
+  ja: ファイルの読み取りに失敗しました
+  es: error al leer el archivo
+  de: Fehler beim Lesen der Datei
+  ru: не удалось прочитать файл
+  it: impossibile leggere il file
+  pt: falha ao ler o arquivo
+  ko: 파일을 읽는 데 실패했습니다
+  no: kunne ikke lese filen
+  is: tókst ekki að lesa skrána
+  uk: не вдалося прочитати файл
+  th: อ่านไฟล์ล้มเหลว
+  el: απέτυχε η ανάγνωση του αρχείου
+  da: kunne ikke læse filen
+user_does_not_exist:
+  en: User does not exist.
+  zh_CN: 用户不存在。
+  zh_TW: 用戶不存在。
+  fr: L'utilisateur n'existe pas.
+  ja: ユーザーが存在しません。
+  es: El usuario no existe.
+  de: Benutzer existiert nicht.
+  ru: Пользователь не существует.
+  it: L'utente non esiste.
+  pt: O usuário não existe.
+  ko: 사용자가 존재하지 않습니다.
+  no: Brukeren eksisterer ikke.
+  is: Notandinn er ekki til.
+  uk: Користувача не існує.
+  th: ไม่มีผู้ใช้นี้
+  el: Ο χρήστης δεν υπάρχει.
+  da: Brugeren findes ikke.
+
+incorrect_password:
+  en: Incorrect password.
+  zh_CN: 密码不正确。
+  zh_TW: 密碼不正確。
+  fr: Mot de passe incorrect.
+  ja: パスワードが間違っています。
+  es: Contraseña incorrecta.
+  de: Falsches Passwort.
+  ru: Неверный пароль.
+  it: Password errata.
+  pt: Senha incorreta.
+  ko: 잘못된 비밀번호입니다.
+  no: Feil passord.
+  is: Rangt lykilorð.
+  uk: Невірний пароль.
+  th: รหัสผ่านไม่ถูกต้อง
+  el: Λάθος κωδικός πρόσβασης.
+  da: Forkert adgangskode.
+
+database_connection_failed:
+  en: Database connection failed.
+  zh_CN: 数据库连接失败。
+  zh_TW: 數據庫連接失敗。
+  fr: La connexion à la base de données a échoué.
+  ja: データベースへの接続に失敗しました。
+  es: Falló la conexión a la base de datos.
+  de: Datenbankverbindung fehlgeschlagen.
+  ru: Сбой подключения к базе данных.
+  it: Connessione al database fallita.
+  pt: Falha na conexão com o banco de dados.
+  ko: 데이터베이스 연결에 실패했습니다.
+  no: Tilkobling til databasen mislyktes.
+  is: Tókst ekki að tengjast gagnagrunninum.
+  uk: Помилка підключення до бази даних.
+  th: การเชื่อมต่อฐานข้อมูลล้มเหลว
+  el: Η σύνδεση με τη βάση δεδομένων απέτυχε.
+  da: Databasetilkobling mislykkedes.
+account:
+  en: Account
+  zh_CN: 账号
+  zh_TW: 帳號
+  fr: Compte
+  ja: アカウント
+  es: Cuenta
+  de: Konto
+  ru: Учетная запись
+  it: Account
+  pt: Conta
+  ko: 계정
+  no: Konto
+  is: Reikningur
+  uk: Обліковий запис
+  th: บัญชี
+  el: Λογαριασμός
+  da: Konto
+
+password:
+  en: Password
+  zh_CN: 密码
+  zh_TW: 密碼
+  fr: Mot de passe
+  ja: パスワード
+  es: Contraseña
+  de: Passwort
+  ru: Пароль
+  it: Password
+  pt: Senha
+  ko: 비밀번호
+  no: Passord
+  is: Lykilorð
+  uk: Пароль
+  th: รหัสผ่าน
+  el: Κωδικός
+  da: Adgangskode
+
+login:
+  en: Login
+  zh_CN: 登录
+  zh_TW: 登入
+  fr: Connexion
+  ja: ログイン
+  es: Iniciar sesión
+  de: Anmelden
+  ru: Войти
+  it: Accedi
+  pt: Login
+  ko: 로그인
+  no: Logg inn
+  is: Innskráning
+  uk: Увійти
+  th: เข้าสู่ระบบ
+  el: Σύνδεση
+  da: Log ind
+user_list:
+  en: User list
+  zh_CN: 用户列表
+  zh_TW: 使用者列表
+  fr: Liste d'utilisateurs
+  ja: ユーザーリスト
+  es: Lista de usuarios
+  de: Benutzerliste
+  ru: Список пользователей
+  it: Lista utenti
+  pt: Lista de usuários
+  ko: 사용자 목록
+  no: Brukerliste
+  is: Notendalisti
+  uk: Список користувачів
+  th: รายชื่อผู้ใช้
+  el: Λίστα χρηστών
+  da: Brugerliste
+
+delete:
+  en: Delete
+  zh_CN: 删除
+  zh_TW: 刪除
+  fr: Supprimer
+  ja: 削除
+  es: Eliminar
+  de: Löschen
+  ru: Удалить
+  it: Elimina
+  pt: Deletar
+  ko: 삭제
+  no: Slett
+  is: Eyða
+  uk: Видалити
+  th: ลบ
+  el: Διαγραφή
+  da: Slet
+return_to_homepage:
+  en: Return to homepage
+  zh_CN: 返回主页
+  zh_TW: 返回主頁
+  fr: Retour à la page d'accueil
+  ja: ホームページに戻る
+  es: Volver a la página principal
+  de: Zur Startseite zurückkehren
+  ru: Вернуться на главную страницу
+  it: Torna alla homepage
+  pt: Retornar à página inicial
+  ko: 홈페이지로 돌아가기
+  no: Returner til hovedsiden
+  is: Fara aftur á heimasíðu
+  uk: Повернутися на головну сторінку
+  th: กลับสู่หน้าหลัก
+  el: Επιστροφή στην αρχική σελίδα
+  da: Returner til hjemmesiden
+username:
+  en: Username
+  zh_CN: 用户名
+  zh_TW: 用戶名
+  fr: Nom d'utilisateur
+  ja: ユーザーネーム
+  es: Nombre de usuario
+  de: Benutzername
+  ru: Имя пользователя
+  it: Nome utente
+  pt: Nome de usuário
+  ko: 사용자 이름
+  no: Brukernavn
+  is: Notendanafn
+  uk: Ім'я користувача
+  th: ชื่อผู้ใช้
+  el: Όνομα χρήστη
+  da: Brugernavn
+generate_a_string_of_a_specified_length:
+  en: Generate a string of a specified length
+  zh_CN: 生成指定长度的字符串
+  zh_TW: 生成指定長度的字串
+  fr: Générer une chaîne de caractères d'une longueur spécifiée
+  ja: 指定した長さの文字列を生成する
+  es: Generar una cadena de una longitud especificada
+  de: Erzeugen Sie eine Zeichenkette einer bestimmten Länge
+  ru: Генерировать строку заданной длины
+  it: Generare una stringa di una lunghezza specificata
+  pt: Gerar uma string de um comprimento especificado
+  ko: 지정된 길이의 문자열 생성
+  no: Generer en streng av en spesifisert lengde
+  is: Búa til streng af tiltekinni lengd
+  uk: Генерувати рядок заданої довжини
+  th: สร้างสตริงความยาวที่ระบุ
+  el: Δημιουργήστε μια συμβολοσειρά ενός καθορισμένου μήκους
+  da: Generer en streng af en bestemt længde
+contact_support:
+  en: Contact Support
+  zh_CN: 联系支持
+  zh_TW: 聯繫支援
+  fr: Contacter le support
+  ja: サポートに連絡する
+  es: Contactar con soporte
+  de: Support kontaktieren
+  ru: Связаться со службой поддержки
+  it: Contatta il supporto
+  pt: Contato com o suporte
+  ko: 지원에 문의하세요
+  no: Kontaktstøtte
+  is: Hafa samband við þjónustu
+  uk: Звернутися до служби підтримки
+  th: ติดต่อฝ่ายสนับสนุน
+  el: Επικοινωνία με την υποστήριξη
+  da: Kontakt support
+page_not_found:
+  en: Page Not Found
+  zh_CN: 页面未找到
+  zh_TW: 找不到網頁
+  fr: Page non trouvée
+  ja: ページが見つかりません
+  es: Página no encontrada
+  de: Seite nicht gefunden
+  ru: Страница не найдена
+  it: Pagina non trovata
+  pt: Página não encontrada
+  ko: 페이지를 찾을 수 없습니다
+  no: Siden ble ikke funnet
+  is: Síða fannst ekki
+  uk: Сторінку не знайдено
+  th: ไม่พบหน้านี้
+  el: Η σελίδα δεν βρέθηκε
+  da: Side ikke fundet
+are_you_sure_you_want_to_delete:
+  en: Are you sure you want to delete?
+  zh_CN: 确定删除吗？
+  zh_TW: 確定要刪除嗎？
+  fr: Êtes-vous sûr de vouloir supprimer ?
+  ja: 削除してもよろしいですか？
+  es: ¿Estás seguro de que quieres eliminar?
+  de: Sind Sie sicher, dass Sie löschen möchten?
+  ru: Вы уверены, что хотите удалить?
+  it: Sei sicuro di voler eliminare?
+  pt: Tem certeza de que deseja excluir?
+  ko: 정말로 삭제하시겠습니까?
+  no: Er du sikker på at du vil slette?
+  is: Ertu viss um að þú viljir eyða?
+  uk: Ви впевнені, що хочете видалити?
+  th: คุณแน่ใจหรือว่าต้องการลบ?
+  el: Είστε σίγουροι ότι θέλετε να διαγράψετε;
+  da: Er du sikker på, at du vil slette?
+yes:
+  en: Yes
+  zh_CN: 是
+  zh_TW: 是
+  fr: Oui
+  ja: はい
+  es: Sí
+  de: Ja
+  ru: Да
+  it: Sì
+  pt: Sim
+  ko: 예
+  no: Ja
+  is: Já
+  uk: Так
+  th: ใช่
+  el: Ναι
+  da: Ja
+cancel:
+  en: Cancel
+  zh_CN: 取消
+  zh_TW: 取消
+  fr: Annuler
+  ja: キャンセル
+  es: Cancelar
+  de: Abbrechen
+  ru: Отмена
+  it: Annulla
+  pt: Cancelar
+  ko: 취소
+  no: Avbryt
+  is: Hætta við
+  uk: Відмінити
+  th: ยกเลิก
+  el: Ακύρωση
+  da: Annuller
+operation:
+  en: Operation
+  zh_CN: 操作
+  zh_TW: 操作
+  fr: Opération
+  ja: 操作
+  es: Operación
+  de: Betrieb
+  ru: Операция
+  it: Operazione
+  pt: Operação
+  ko: 작업
+  no: Operasjon
+  is: Aðgerð
+  uk: Операція
+  th: การดำเนินการ
+  el: Λειτουργία
+  da: Operation
+user:
+  en: User
+  zh_CN: 用户
+  zh_TW: 用戶
+  fr: Utilisateur
+  ja: ユーザー
+  es: Usuario
+  de: Benutzer
+  ru: Пользователь
+  it: Utente
+  pt: Usuário
+  ko: 사용자
+  no: Bruker
+  is: Notandi
+  uk: Користувач
+  th: ผู้ใช้
+  el: Χρήστης
+  da: Bruger
+
+add_user:
+  en: Add User
+  zh_CN: 添加用户
+  zh_TW: 添加用戶
+  fr: Ajouter un utilisateur
+  ja: ユーザーを追加
+  es: Añadir usuario
+  de: Benutzer hinzufügen
+  ru: Добавить пользователя
+  it: Aggiungi utente
+  pt: Adicionar usuário
+  ko: 사용자 추가
+  no: Legg til bruker
+  is: Bæta við notanda
+  uk: Додати користувача
+  th: เพิ่มผู้ใช้
+  el: Προσθήκη χρήστη
+  da: Tilføj bruger
+swagger_api_page:
+  en: Swagger API Page
+  zh_CN: Swagger API页面
+  zh_TW: Swagger API頁面
+  fr: Page API Swagger
+  ja: Swagger APIページ
+  es: Página API de Swagger
+  de: Swagger-API-Seite
+  ru: Страница Swagger API
+  it: Pagina API Swagger
+  pt: Página API Swagger
+  ko: Swagger API 페이지
+  no: Swagger API-side
+  is: Swagger API síða
+  uk: Сторінка Swagger API
+  th: หน้า Swagger API
+  el: Σελίδα Swagger API
+  da: Swagger API-side
+
+login_page:
+  en: Login Page
+  zh_CN: 登录页面
+  zh_TW: 登入頁面
+  fr: Page de connexion
+  ja: ログインページ
+  es: Página de inicio de sesión
+  de: Anmeldeseite
+  ru: Страница входа
+  it: Pagina di accesso
+  pt: Página de login
+  ko: 로그인 페이지
+  no: Innloggingsside
+  is: Innskráningarsíða
+  uk: Сторінка входу
+  th: หน้าเข้าสู่ระบบ
+  el: Σελίδα εισόδου
+  da: Log ind side
+is_starting:
+  en: is starting
+  zh_CN: 正在启动
+  zh_TW: 正在啟動
+  fr: est en train de démarrer
+  ja: 開始中
+  es: está iniciando
+  de: wird gestartet
+  ru: начинается
+  it: sta avviando
+  pt: está iniciando
+  ko: 시작 중
+  no: starter
+  is: er að byrja
+  uk: починається
+  th: กำลังเริ่มต้น
+  el: ξεκινάει
+  da: starter
+
+listen_on:
+  en: listen on
+  zh_CN: 在以下位置监听
+  zh_TW: 在以下位置監聽
+  fr: écouter sur
+  ja: にリッスンする
+  es: escucha en
+  de: hören auf
+  ru: слушать на
+  it: ascolta su
+  pt: ouvir em
+  ko: 다음에서 수신
+  no: lytt på
+  is: hlustaðu á
+  uk: слухати на
+  th: ฟังที่
+  el: ακούστε στο
+  da: lyt på

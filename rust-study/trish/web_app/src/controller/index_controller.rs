@@ -1,5 +1,6 @@
 use axum::Router;
 use axum::routing::{get,post, MethodRouter};
+use crate::controller::user_controller::create_user;
 use crate::print_hello;
 
 pub fn root() -> Router {
@@ -13,7 +14,7 @@ pub fn root() -> Router {
 pub fn get_foo() -> Router {
     print_hello();
     async fn handler() -> &'static str {
-        "Hi from `GET /foo`"
+        "foo router"
     }
 
     route("/foo", get(handler))
@@ -21,12 +22,18 @@ pub fn get_foo() -> Router {
 
 pub fn post_foo() -> Router {
     async fn handler() -> &'static str {
-        "Hi from `POST /foo`"
+        "post foo"
     }
 
     route("/foo", post(handler))
 }
-
+pub fn user_route()->Router{
+    async fn handler() -> &'static str {
+        "user router"
+    }
+    route("/user", post(create_user));
+  return    route("/user",get(handler));
+}
 pub fn route(path: &str, method_router: MethodRouter<()>) -> Router {
     Router::new().route(path, method_router)
 }
