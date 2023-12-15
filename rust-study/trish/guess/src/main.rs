@@ -3,6 +3,10 @@ use std::ffi::OsString;
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
+mod command;
+mod core;
+mod simple;
+mod util;
 
 /// A fictional versioning CLI
 #[derive(Debug, Parser)] // requires `derive` feature

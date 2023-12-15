@@ -7,3 +7,9 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.4.11", features = ["derive", "cargo"] }
+bincode="1"
+# serde 用在将rust中的值进行各种格式的序列化和反序列化
+serde="1"
+serde_cbor="0.8"
+serde_derive="1"
+serde_json="1"
