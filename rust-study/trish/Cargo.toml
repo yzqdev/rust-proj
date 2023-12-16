@@ -8,5 +8,6 @@ members = [
     "web_app",
     "basic",
     "mini_web",
-    "guess"
+    "guess",
+    "find_file"
 ]
