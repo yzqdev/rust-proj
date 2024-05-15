@@ -9,4 +9,4 @@ name = "rcli"
 test = false
 bench = false
 [dependencies]
-clap = { version = "4.4.11", features = ["derive", "cargo"] }
+clap = { version = "^4.4.11", features = ["derive", "cargo"] }
