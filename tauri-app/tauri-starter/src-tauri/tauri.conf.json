@@ -2,7 +2,7 @@
   "build": {
     "beforeDevCommand": "pnpm dev",
     "beforeBuildCommand": "pnpm build",
-    "devPath": "http://localhost:1420",
+    "devPath": "http://localhost:1430",
     "distDir": "../dist"
   },
   "package": {
@@ -11,7 +11,21 @@
   },
   "tauri": {
     "allowlist": {
-      "all": false,
+      "all": false, "os": {
+        "all": true 
+      },
+       "fs": {
+        "all": true,  
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true,
+        "copyFile": true,
+        "createDir": true,
+        "removeDir": true,
+        "removeFile": true,
+        "renameFile": true,"scope": ["*/**"],
+        "exists": true
+      },
       "shell": {
         "all": false,
         "open": true
