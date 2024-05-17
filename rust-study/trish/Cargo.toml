@@ -9,5 +9,6 @@ members = [
     "basic",
     "mini_web",
     "guess",
-    "find_file"
+    "find_file",
+    "minigrep"
 ]

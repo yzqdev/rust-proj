@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-fn cal_time(){
+pub fn cal_time(){
     let start = SystemTime::now();
 
     for a in 0..=1000 {
@@ -13,5 +13,5 @@ fn cal_time(){
         }
     }
 
-    println!("{:?} seconds", start.elapsed());
+    println!("{:?} seconds", start.elapsed().unwrap());
 }

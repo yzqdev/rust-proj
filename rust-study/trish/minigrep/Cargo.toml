@@ -1,0 +1,8 @@
+[package]
+name = "minigrep"
+version = "0.1.0"
+authors = ["Subhojit Paul <subhojitpaul21@gmail.com>"]
+edition = "2021"
+[dependencies]
+colored = "2.1.0"
+regex = "1"
