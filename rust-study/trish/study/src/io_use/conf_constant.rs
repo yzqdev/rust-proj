@@ -1,6 +1,5 @@
 
-
-pub const unbuild:&str = r#"import { defineBuildConfig } from "unbuild";
+pub const UNBUILD_CONF:&str = r#"import { defineBuildConfig } from "UNBUILD";
 
 pub default defineBuildConfig({
   entries: ["./src/index"],
@@ -14,7 +13,7 @@ pub default defineBuildConfig({
 });
 "#;
 
-pub const tsconf:&str  = r#"
+pub const TSCONF:&str  = r#"
 {
   "compilerOptions": {
     "sourceMap": true,
@@ -31,8 +30,8 @@ pub const tsconf:&str  = r#"
     "resolveJsonModule": true
   }
 }
-";
-pub const tsupConf:&str  = "import { defineConfig } from "tsup";
+"#;
+pub const TSUP_CONF:&str  = r#"import { defineConfig } from "tsup";
 
 pub default defineConfig({
   entry: ["src/"],
@@ -66,7 +65,7 @@ pub default defineConfig({
   ],
 });
 "#;
-pub const rsbuild:&str  = r#"
+pub const RSBUILD_CONF:&str  = r#"
 import { defineConfig } from "@rsbuild/core";
 import { pluginBabel } from "@rsbuild/plugin-babel";
 import { pluginSolid } from "@rsbuild/plugin-solid";
@@ -124,7 +123,7 @@ pub default defineConfig({
   },
 });
 "#;
-pub const gulpfile:&str  = r#"
+pub const GULP_CONF:&str  = r#"
 import * as gulp from "gulp";
 import * as gulpExe from "gulp-execa";
 

@@ -10,5 +10,6 @@ rand = "0.8.5"
 clap = { version = "^4.5.4", features = ["derive", "cargo"] }
 md-5 = "0.10.6"
  
-reqwest = { version = "0.12.4", features = ["json"] }
+reqwest = { version = "0", features = ["json"] }
 tokio = { version = "1", features = ["full"] }
+dirs="*"
