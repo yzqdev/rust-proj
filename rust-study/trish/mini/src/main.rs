@@ -1,8 +1,4 @@
-mod json_util;
-mod files;
-mod advance;
-
-use crate::files::file_control::read_lines;
+use mini::{files, json_util};
 
 fn main() {
     println!("Hello, world!");

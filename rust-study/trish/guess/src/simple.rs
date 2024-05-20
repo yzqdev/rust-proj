@@ -18,7 +18,7 @@ fn simple_print() {
     let res = main_req();
     large_req();
     say();
-    get_file_text();
+    get_file_text().expect("TODO: panic message");
 }
 
 fn large_req() {
