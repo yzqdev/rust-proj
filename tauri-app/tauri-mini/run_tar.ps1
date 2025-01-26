@@ -1,1 +1,0 @@
-yarn tauri dev
