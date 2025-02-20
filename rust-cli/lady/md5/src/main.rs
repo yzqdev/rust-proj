@@ -16,14 +16,12 @@ fn main() {
 
 }
 fn gen_fsmd5(file: &str){
-    let mut buffer = [0u8;5];
+    let mut buffer = [0u8;8192];
     let mut read_file = fs::File::open(file).unwrap();
 
     loop {
         let read_res = read_file.read(&mut buffer).unwrap();
-        // println!("==>{:?}==={:?}",read_res, buffer);
-        // 清空多余的数据
-        buffer = [0u8;5];
+        buffer = [0u8;8192];
         if read_res < buffer.len() {
             break;
         }

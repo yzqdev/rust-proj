@@ -130,7 +130,7 @@ mod tests {
         let file = File::open("./test-data/test.txt").unwrap();
         let config = Config {
             options: Some(Options::new(true, false)),
-            query: query,
+            query,
             file: file,
         };
         let options_struct = Options::new(true, false);

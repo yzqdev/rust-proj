@@ -1,7 +1,7 @@
 [workspace]
 resolver="2"
 members = [
-    "cli-tool",
-    "blocklang-installer",
+    "phoebe",
+     "pela",
     "md5"
 ]
