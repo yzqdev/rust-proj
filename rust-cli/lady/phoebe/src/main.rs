@@ -1,5 +1,6 @@
 use clap::Parser;
 mod commands;
+mod cli;
 #[derive(Debug, Parser)]
 #[command(name="phoebe", version, author, about, long_about=None)]
 struct Opts {
