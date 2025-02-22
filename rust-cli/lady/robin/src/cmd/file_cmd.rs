@@ -20,7 +20,7 @@ pub enum FileCmd {
 pub struct FileSubCmd {
     file_name: String,
 }
-pub fn calc_md5(file_path: String) {
+pub fn calc_md5(file_path: &str) {
     let now = Instant::now();
 
     util::gen_fsmd5(file_path);

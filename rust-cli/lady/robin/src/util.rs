@@ -3,7 +3,7 @@ use std::{fs, io::Read};
 use md5::Digest;
 
 
-pub fn gen_fsmd5(file: String){
+pub fn gen_fsmd5(file: &str){
     let mut buffer = [0u8;8192];
     let mut read_file = fs::File::open(file).unwrap();
 

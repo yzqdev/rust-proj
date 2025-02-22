@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+  schedule:
+  - cron: '00 00 * * *'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ${{ matrix.job.os }}
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        job:
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            flags: --features=native-tls
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            flags: --no-default-features --features=native-tls,online-tests # disables rustls
+          - target: x86_64-apple-darwin
+            os: macos-13
+            flags: --features=native-tls
+          - target: aarch64-apple-darwin
+            os: macos-14
+            flags: --features=native-tls
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            flags: --features=native-tls
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            use-cross: true
+          - target: aarch64-unknown-linux-musl
+            os: ubuntu-latest
+            use-cross: true
+            flags: -- --test-threads=4
+          - target: arm-unknown-linux-gnueabihf
+            os: ubuntu-latest
+            use-cross: true
+            flags: -- --test-threads=4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.74.0 # minimum supported rust version
+          targets: ${{ matrix.job.target }}
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: v2-${{ matrix.job.target }}
+      
+      - uses: ClementTsang/cargo-action@v0.0.6
+        with:
+          use-cross: ${{ !!matrix.job.use-cross }}
+          command: test
+          args: --target ${{ matrix.job.target }} ${{ matrix.job.flags }}
+
+  fmt-and-clippy:
+    name: Rustfmt and clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Rustfmt
+        run: cargo fmt --check
+
+      - name: Clippy (default features)
+        run: cargo clippy --tests -- -D warnings -A unknown-lints
+
+      - name: Clippy (all features)
+        run: cargo clippy --all-features --tests -- -D warnings -A unknown-lints
+
+      - name: Clippy (native-tls only)
+        run: cargo clippy --no-default-features --features=native-tls,online-tests --tests -- -D warnings -A unknown-lints

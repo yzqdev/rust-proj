@@ -10,7 +10,7 @@ md-5 = "0.10.1"
 hex-literal = "0.4.1"
 digest = "0.10.3"
 clap = { version = "4.5.30", features = ["derive","cargo"] }
-colored = "2.1.0"
+colored = "3.0.0"
 jsonxf = "1.1.1"
 mime = "0.3.17"
 anyhow = "1.0.80"

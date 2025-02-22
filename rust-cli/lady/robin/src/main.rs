@@ -29,7 +29,7 @@ fn main() {
             match file_cmd {
                 FileCmd::Image => {}
                 FileCmd::Md5 { file_name } => {
-                    calc_md5(file_name);
+                    calc_md5(file_name.as_str());
                 }
             }
         }
