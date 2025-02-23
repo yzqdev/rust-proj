@@ -1,6 +1,5 @@
 use clap::{arg, command, Parser, Subcommand};
 use cmd::file_cmd::{calc_md5, FileArgs, FileCmd};
-use util::gen_fsmd5;
 mod cmd;
 pub mod util;
 

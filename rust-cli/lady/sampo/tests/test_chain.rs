@@ -12,7 +12,7 @@ fn test_life(){
     };
     println!("s.content = {}", s.content);
 }
-fn longer(s1: &str, s2: &str) -> &str {
+fn longer<'a>(s1: &'a str, s2: &'a str) -> &'a str {
     if s2.len() > s1.len() {
         s2
     } else {
