@@ -1,0 +1,9 @@
+/target
+.DS_Store
+.VSCodeCounter
+
+crdt.md
+themes/_*
+docs/_*
+
+/posts
