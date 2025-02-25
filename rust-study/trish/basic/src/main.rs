@@ -1,6 +1,8 @@
 mod datatype;
+mod syntax;
 use crate::datatype::{array_data::get_array, struct_data::Site};
 use clap::{Arg, ArgAction, Command};
+use syntax::generics::show_generic;
 #[derive(Debug)]
 
 struct Rectangle {
@@ -98,6 +100,7 @@ fn main() {
                         .num_args(1..),
                 ),
         )
+        .subcommand(Command::new("generic"))
         .get_matches();
 
     match matches.subcommand() {
@@ -136,6 +139,9 @@ fn main() {
             } else {
                 println!("Displaying all locally installed packages...");
             }
+        }
+        Some(("generic",_))=>{
+            show_generic();
         }
         _ => unreachable!(), // If all subcommands are defined above, anything else is unreachable
     }
