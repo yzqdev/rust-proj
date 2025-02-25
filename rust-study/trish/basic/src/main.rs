@@ -1,7 +1,7 @@
 mod datatype;
 mod syntax;
 use crate::datatype::{array_data::get_array, struct_data::Site};
-use clap::{Arg, ArgAction, Command};
+use clap::{arg, Arg, ArgAction, Command};
 use syntax::generics::show_generic;
 #[derive(Debug)]
 
@@ -92,6 +92,7 @@ fn main() {
                         .action(ArgAction::SetTrue)
                         .help("view package information"),
                 )
+                .arg(arg!(<name> "package name"))
                 .arg(
                     Arg::new("package")
                         .help("packages")

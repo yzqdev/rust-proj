@@ -1,6 +1,6 @@
+use clap::{Command, arg};
 use find_file::{Config, main_fun};
 use glob::glob;
-use clap::{Command, arg};
 
 fn main() {
     let cmd = Command::new(env!("CARGO_CRATE_NAME"))
@@ -23,15 +23,15 @@ fn main() {
         }
         Some(("png", png_match)) => {
             let path = png_match.get_one::<String>("PATH").expect("parser error");
-            for entry in glob(format!("{}/**/*.png",path).as_str()).unwrap() {
+            for entry in glob(format!("{}/**/*.png", path).as_str()).unwrap() {
                 println!("{}", entry.unwrap().display());
             }
-            println!("{}",env!("PATH"))
+            println!("{}", env!("PATH"))
         }
-        Some(("gen",_))=>{
- println!("gen")
+        Some(("gen", _)) => {
+            println!("gen")
         }
-        
+
         _ => unreachable!("parser should ensure only valid subcommand names are used"),
     }
-} 
+}

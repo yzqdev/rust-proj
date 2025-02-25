@@ -25,17 +25,21 @@ fn check_destruct() {
     Struct { e, .. } = Struct { e: 5 };
 
     assert_eq!([1, 2, 1, 4, 5], [a, b, c, d, e]);
+    let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+
+    // 使用 filter 筛选出所有偶数
+    let even_numbers: Vec<i32> = numbers.iter().filter(|&x| x % 2 == 0).cloned().collect();
+
+    println!("原始数组中的偶数有: {:?}", even_numbers);
 
     let guess = "42".parse::<String>().expect("Not a number!");
-    for i in 1..4 {
-        
-    }
+    for i in 1..4 {}
 }
 
-fn main() {
+fn simple_borrow() {
     let s = String::from("hello"); // s 进入作用域
 
-   let borrowed= takes_ownership(s); // s 的值移动到函数里 ...
+    let borrowed = takes_ownership(s); // s 的值移动到函数里 ...
     // ... 所以到这里不再有效
     println!("在move进函数后继续使用s: {}", borrowed);
     let x = 5; // x 进入作用域

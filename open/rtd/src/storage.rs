@@ -83,7 +83,13 @@ struct Csv {
 
 impl Csv {
     fn new() -> Result<Self> {
-        let filename = Csv::filename()?;
+        let filename = match Csv::filename() {
+            Some(name) => name,
+            None => {
+                eprintln!("error");
+                env::var("home").unwrap_or_else(|_| "/".to_string())
+            }
+        };
         let path = Path::new(&filename);
 
         if !path.exists() {
@@ -115,10 +121,10 @@ impl Csv {
         Ok(csv)
     }
 
-    fn filename() -> Result<String> {
-        let home = env::var("HOME")?;
-        let filename = home + "/" + CSV_FILE_NAME;
-        Ok(filename)
+    fn filename() -> Option<String> {
+        let home = dirs::home_dir()?;
+        let filename = home.join(CSV_FILE_NAME);
+        Some(filename.to_string_lossy().to_string())
     }
 
     fn content(&mut self) -> Result<String> {
@@ -167,7 +173,11 @@ impl Csv {
 #[cfg(test)]
 mod tests {
     use super::*;
-
+    #[test]
+    fn test_env() {
+        let a = env::var("home").unwrap_or_else(|_| "/".to_string());
+        println!("{a}")
+    }
     #[test]
     fn create_file() -> Result<()> {
         Csv::new()?;

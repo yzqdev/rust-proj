@@ -169,8 +169,8 @@ const NEWLINE_FAKE: &str = "<@^_fake_newline_$#>";
 
 fn timestamp_to_datetime_string(timestamp: Option<i64>) -> String {
     if let Some(time_stamp) = timestamp {
-        if let Some(utc) = NaiveDateTime::from_timestamp_opt(time_stamp, 0) {
-            Local.from_utc_datetime(&utc).to_string()
+        if let Some(utc) = DateTime::from_timestamp(time_stamp, 0) {
+            Local.from_utc_datetime(&utc.naive_utc()).to_string()
         } else {
             String::new()
         }
