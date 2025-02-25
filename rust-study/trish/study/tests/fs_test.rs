@@ -1,3 +1,4 @@
+use std::io::{self, Read};
 use std::{env, fs, fs::File};
 use std::net::IpAddr;
 use std::path::Path;
@@ -8,21 +9,31 @@ use study::io_use::simple_fs::add;
 fn it_works() {
 
     let result = add(2, 2);
+    let cwd=env::current_dir();
+    if let Ok(cur)=cwd {
+        println!("{:?}",cur);
+    }
     println!("{}",result);
-    fs::write(Path::new("./target/build.config.ts"), UNBUILD_CONF)
+    fs::write(Path::new("../target/build.config.ts"), UNBUILD_CONF)
         .expect("cant find target foldr");
     assert_eq!(result, 4);
 }
 #[test]
 
-pub fn read_txt(){
+pub fn read_txt()->io::Result<()>{
     println!("{:?}",env::current_dir().unwrap());
       let greeting_file_result = File::open("Cargo.toml");
 
-    let greeting_file = match greeting_file_result {
+    let mut greeting_file = match greeting_file_result {
         Ok(file) => file,
         Err(error) => panic!("Problem opening the file: {:?}", error),
     };
+     let mut buffer = String::new();
+
+   
+    greeting_file.read_to_string(&mut buffer)?;
+    println!("{}",buffer);
+    Ok(())
 }
 
 #[test]

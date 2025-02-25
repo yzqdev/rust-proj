@@ -1,0 +1,27 @@
+[application]
+
+# App (Project) Name
+name = "dx_desk"
+
+[web.app]
+
+# HTML title tag content
+title = "dx_desk"
+
+# include `assets` in web platform
+[web.resource]
+
+# Additional CSS style files
+style = []
+
+# Additional JavaScript files
+script = []
+
+[web.resource.dev]
+
+# Javascript code file
+# serve: [dev-server] only
+script = []
+[bundle]
+identifier = "com.yzqdev.dx_desk"
+publisher = "MyCompany"

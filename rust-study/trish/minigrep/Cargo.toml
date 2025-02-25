@@ -2,7 +2,8 @@
 name = "minigrep"
 version = "0.1.0"
 authors = ["Subhojit Paul <subhojitpaul21@gmail.com>"]
-edition = "2021"
+edition = "2024"
 [dependencies]
-colored = "2.1.0"
+colored = "3.0.0"
 regex = "1"
+clap = { version = "^4.5.4", features = ["derive", "cargo"] }

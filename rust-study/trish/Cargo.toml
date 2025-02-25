@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "study",
-    "libs",
+    "fade",
     "mini",
     "rcli",
     "web_app",

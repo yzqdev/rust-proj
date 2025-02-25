@@ -5,11 +5,11 @@ use std::env;
 use std::fs;
 use std::process;
 
-pub fn main_fun() {
-    let args: Vec<String> = env::args().collect();
+pub fn main_fun(conf:Config) {
+    
 
     // 对 build 返回的 `Result` 进行处理
-    let config = Config::build(&args).unwrap_or_else(|err| {
+    let config = Config::build(conf).unwrap_or_else(|err| {
         println!("Problem parsing arguments: {err}");
         process::exit(1);
     });
@@ -24,21 +24,18 @@ pub fn main_fun() {
     println!("With text:\n{contents}");
 }
 
-struct Config {
-    query: String,
-    file_path: String,
+pub struct Config {
+   pub query: String,
+    pub file_path: String,
 }
 
 impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
+    fn build(args: Self) -> Result<Config, &'static str> {
+       
 
-        let query = args[1].clone();
-        let file_path = args[2].clone();
+        let query = args.query.clone();
+        let file_path = args.file_path.clone();
 
         Ok(Config { query, file_path })
     }
 }
-
