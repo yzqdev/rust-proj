@@ -13,3 +13,7 @@ serde = { version = "1.0", features = ["derive"] }
 # but you may be using a different one.
 serde_json = "1.0"
 anyhow={version = "*"}
+walkdir={version = "*"}
+webp={version = "*"}
+image={version = "*"}
+rayon={version = "*"}
