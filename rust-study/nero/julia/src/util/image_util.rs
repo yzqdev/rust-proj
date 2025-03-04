@@ -1,6 +1,6 @@
+use anyhow::{Error, Result};
 use std::path::{Path, PathBuf};
 use std::{env, fs};
-use anyhow::Error;
 use walkdir::WalkDir;
 use webp::Encoder;
 
@@ -39,7 +39,7 @@ pub fn convert_jpg_to_webp(
     Ok(())
 }
 
-pub fn jpg_to_webp_folder(out_path: &str) -> Result<(), Error> {
+pub fn jpg_to_webp_folder(out_path: &str) -> Result<()> {
     let in_folder = env::current_dir()?;
     let out_folder = Path::new(out_path);
 
@@ -53,8 +53,7 @@ pub fn jpg_to_webp_folder(out_path: &str) -> Result<(), Error> {
                 .extension()
                 .map_or(false, |ext| ext.eq_ignore_ascii_case("png"))
         {
-            println!("文件是{:?}", entry.path());
-          let _=  convert_jpg_to_webp(path, out_folder).map_err(|e|eprintln!("error is=>{:?}", e));
+            convert_jpg_to_webp(path, out_folder).map_err(|e| eprintln!("error is=>{:?}", e));
         }
     }
 

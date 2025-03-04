@@ -1,8 +1,9 @@
 pub mod douyin_cmd;
 
-use crate::util::image_util;
+use crate::util::{file_util, image_util};
+use anyhow::Error;
 use clap::{Command, arg};
-
+use colored::Colorize;
 use douyin_cmd::douyin_command;
 use reqwest::Result;
 fn cli() -> Command {
@@ -17,6 +18,9 @@ fn cli() -> Command {
         )
         .subcommand(
             Command::new("image").subcommand(Command::new("webp").arg(arg!(<out_dir> "输出目录"))),
+        )
+        .subcommand(
+            Command::new("file").subcommand(Command::new("sort").arg(arg!(<folder> "目录"))),
         )
 }
 pub async fn run_main() -> Result<()> {
@@ -44,11 +48,27 @@ pub async fn run_main() -> Result<()> {
                     let folder = out_dir.get_one::<String>("out_dir").expect("webp");
 
                     println!("转换到{folder}文件夹");
-                    let _ = image_util::jpg_to_webp_folder(folder)
-                        .map(|_| println!("完成"))
-                        .map_err(|e| eprint!("error=>{}", e));
+                    if let Err(e) = image_util::jpg_to_webp_folder(folder) {
+                        eprintln!("error=>{}", e);
+                    };
                 }
-                (name, _) => {}
+                (name, _) => {
+                    println!("{}", "请输入指令".cyan())
+                }
+            }
+        }
+        Some(("file", file_arg)) => {
+            let file_arg_then = file_arg.subcommand().unwrap_or(("help", file_arg));
+            match file_arg_then {
+                ("sort", folder) => {
+                    let _ = file_util::move_file_folder(
+                        folder.get_one::<String>("folder").expect("nothing"),
+                    );
+                }
+
+                (_name, _) => {
+                    println!("{}", "请输入指令".cyan())
+                }
             }
         }
         _ => {
