@@ -1,11 +1,14 @@
 use reqwest::Result;
 mod cmd;
 mod util;
-use log::{debug, error, info, trace, warn};
+use tracing::info;
+use tracing_subscriber;
 #[tokio::main]
 async fn main() -> Result<()> {
-    env_logger::init();
-
+    tracing_subscriber::fmt::init();
+    let number_of_yaks = 3;
+    // this creates a new event, outside of any spans.
+    info!(number_of_yaks, "preparing to shave yaks");
     let _ = cmd::run_main().await.map_err(|e| eprintln!("error=>{}", e));
     Ok(())
 }

@@ -1,3 +1,4 @@
+use anyhow::{Context, Error, Result, anyhow};
 use std::fs;
 use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
@@ -17,18 +18,14 @@ impl FileFunc for FileUtil {
         }
     }
 }
-
-fn move_file_to_folder(
-    file_path: &Path,
-    target_folder: &Path,
-) -> Result<(), Box<dyn std::error::Error>> {
+pub fn move_file_to_folder(file_path: &Path, target_folder: &Path) -> Result<()> {
     // 确保目标文件夹存在
     if !target_folder.exists() {
         fs::create_dir_all(target_folder)?;
     }
 
     // 获取文件名并拼接新的目标路径
-    let file_name = file_path.file_name().ok_or("无法获取文件名")?;
+    let file_name = file_path.file_name().context("文件路径缺少文件名")?;
     let target_path = target_folder.join(file_name);
 
     // 移动文件
@@ -38,7 +35,7 @@ fn move_file_to_folder(
     Ok(())
 }
 
-pub fn move_file_folder(input_folder: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn move_file_folder(input_folder: &str) -> Result<()> {
     let input_path = Path::new(input_folder);
 
     // 遍历所有文件

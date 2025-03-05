@@ -53,7 +53,9 @@ pub fn jpg_to_webp_folder(out_path: &str) -> Result<()> {
                 .extension()
                 .map_or(false, |ext| ext.eq_ignore_ascii_case("png"))
         {
-            convert_jpg_to_webp(path, out_folder).map_err(|e| eprintln!("error is=>{:?}", e));
+            if let Err(e) = convert_jpg_to_webp(path, out_folder) {
+                eprintln!("error is=>{:?}", e)
+            }
         }
     }
 
