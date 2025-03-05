@@ -1,14 +1,18 @@
 [workspace]
 resolver = "2"
 members = [
-    "study",
-    "fade",
-    "mini",
-    "rcli",
-    "web_app",
     "basic",
-    "mini_web",
-    "guess",
+    "counter",
+    "dante",
+    "fade",
     "find_file",
-    "minigrep"
+    "guess",
+    "mini",
+    "mini_web",
+    "minigrep",
+    "rcli",
+    "ruanmei",
+    "seele",
+    "study",
+    "web_app",
 ]
