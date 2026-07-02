@@ -1,11 +1,15 @@
 use std::ffi::OsStr;
 use std::ffi::OsString;
+use std::fs;
+use std::io::Write;
 use std::path::PathBuf;
 
 use clap::{Args, Parser, Subcommand, ValueEnum};
 
-/// A fictional versioning CLI
-#[derive(Debug, Parser)] // requires `derive` feature
+/// pela - A fictional versioning CLI
+///
+/// Simulates Git-like version control operations.
+#[derive(Debug, Parser)]
 #[command(name = "pela")]
 #[command(about = "A fictional versioning CLI", long_about = None)]
 struct Cli {
@@ -15,13 +19,18 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    /// Clones repos
+    /// Initialize a new repository
+    Init {
+        /// Name of the project
+        name: String,
+    },
+    /// Clone a repository
     #[command(arg_required_else_help = true)]
     Clone {
         /// The remote to clone
         remote: String,
     },
-    /// Compare two commits
+    /// Compare two commits or files
     Diff {
         #[arg(value_name = "COMMIT")]
         base: Option<OsString>,
@@ -40,20 +49,35 @@ enum Commands {
         )]
         color: ColorWhen,
     },
-    /// pushes things
+    /// Push changes to a remote
     #[command(arg_required_else_help = true)]
     Push {
         /// The remote to target
         remote: String,
     },
-    /// adds things
+    /// Stage files
     #[command(arg_required_else_help = true)]
     Add {
         /// Stuff to add
         #[arg(required = true)]
         path: Vec<PathBuf>,
     },
+    /// Commit staged changes
+    Commit {
+        /// Commit message
+        #[arg(short, long)]
+        message: String,
+    },
+    /// List the status of working tree
+    Status,
+    /// Stash changes
     Stash(StashArgs),
+    /// Log commit history
+    Log {
+        /// Max log entries
+        #[arg(short, long, default_value_t = 10)]
+        max_count: u32,
+    },
     #[command(external_subcommand)]
     External(Vec<OsString>),
 }
@@ -80,7 +104,6 @@ impl std::fmt::Display for ColorWhen {
 struct StashArgs {
     #[command(subcommand)]
     command: Option<StashCommands>,
-
     #[command(flatten)]
     push: StashPushArgs,
 }
@@ -90,6 +113,7 @@ enum StashCommands {
     Push(StashPushArgs),
     Pop { stash: Option<String> },
     Apply { stash: Option<String> },
+    List,
 }
 
 #[derive(Debug, Args)]
@@ -102,8 +126,27 @@ fn main() {
     let args = Cli::parse();
 
     match args.command {
+        Commands::Init { name } => {
+            let dir = format!(".{}", name);
+            match fs::create_dir_all(&dir) {
+                Ok(_) => {
+                    let mut readme = fs::File::create(format!("{}/README.md", dir)).unwrap();
+                    writeln!(readme, "# {}", name).unwrap();
+                    println!("Initialized empty repository: {}", dir);
+                }
+                Err(e) => eprintln!("Error creating repository: {}", e),
+            }
+        }
         Commands::Clone { remote } => {
-            println!("Cloning {remote}");
+            let dir_name = remote
+                .split('/')
+                .last()
+                .unwrap_or(&remote)
+                .trim_end_matches(".git");
+            match fs::create_dir_all(dir_name) {
+                Ok(_) => println!("Cloned '{}' into '{}'", remote, dir_name),
+                Err(e) => eprintln!("Error cloning: {}", e),
+            }
         }
         Commands::Diff {
             mut base,
@@ -137,22 +180,55 @@ fn main() {
             );
         }
         Commands::Push { remote } => {
-            println!("Pushing to {remote}");
+            println!("Pushing to '{}' (simulated)", remote);
         }
         Commands::Add { path } => {
-            println!("Adding {path:?}");
+            for p in &path {
+                if p.exists() {
+                    println!("Staged: {}", p.display());
+                } else {
+                    eprintln!("Path not found: {}", p.display());
+                }
+            }
+        }
+        Commands::Commit { message } => {
+            println!("Committed with message: \"{}\"", message);
+        }
+        Commands::Status => {
+            println!("On branch main");
+            println!("Nothing to commit, working tree clean");
+        }
+        Commands::Log { max_count } => {
+            println!("Showing last {} commits (simulated)", max_count);
+            println!("commit a1b2c3d4e5f6... (HEAD -> main)");
+            println!("    Initial commit");
         }
         Commands::Stash(stash) => {
             let stash_cmd = stash.command.unwrap_or(StashCommands::Push(stash.push));
             match stash_cmd {
                 StashCommands::Push(push) => {
-                    println!("Pushing {push:?}");
+                    if let Some(msg) = &push.message {
+                        println!("Stashed with message: \"{}\"", msg);
+                    } else {
+                        println!("Stashed working directory changes");
+                    }
                 }
                 StashCommands::Pop { stash } => {
-                    println!("Popping {stash:?}");
+                    if let Some(s) = stash {
+                        println!("Popped stash: {}", s);
+                    } else {
+                        println!("Popped latest stash");
+                    }
                 }
                 StashCommands::Apply { stash } => {
-                    println!("Applying {stash:?}");
+                    if let Some(s) = stash {
+                        println!("Applied stash: {}", s);
+                    } else {
+                        println!("Applied latest stash");
+                    }
+                }
+                StashCommands::List => {
+                    println!("No stashes found");
                 }
             }
         }
@@ -160,6 +236,4 @@ fn main() {
             println!("Calling out to {:?} with {:?}", &args[0], &args[1..]);
         }
     }
-
-    // Continued program logic goes here...
 }

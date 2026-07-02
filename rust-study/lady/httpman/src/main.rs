@@ -1,17 +1,15 @@
- 
-
 use std::collections::HashMap;
-use reqwest::{Client, header, Response};
 use std::str::FromStr;
+
 use anyhow::anyhow;
 use clap::{Args, Parser, Subcommand};
 use colored::Colorize;
-use mime::Mime;
+use reqwest::{header, Client, Response};
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue};
 use reqwest::Url;
 
 #[derive(Parser)]
-#[command(version, author, about, long_about = None)]
+#[command(version, author, about = "HTTP client CLI - make HTTP requests from the terminal", long_about = None)]
 struct Httpie {
     #[command(subcommand)]
     pub methods: Method,
@@ -19,8 +17,18 @@ struct Httpie {
 
 #[derive(Subcommand)]
 enum Method {
+    /// Send a GET request
     Get(Get),
-    Post(Post)
+    /// Send a POST request
+    Post(Post),
+    /// Send a PUT request
+    Put(Put),
+    /// Send a DELETE request
+    Delete(Delete),
+    /// Send a HEAD request
+    Head(Head),
+    /// Send a PATCH request
+    Patch(Patch),
 }
 
 #[derive(Args)]
@@ -31,21 +39,41 @@ struct Get {
 
 #[derive(Args)]
 struct Post {
-    /// Specify the url you wanna request to.
     #[arg(value_parser = parse_url)]
     url: String,
-
-    /// Set the request body.
-    /// Examples:
-    ///     headers:
-    ///         header1:value1
-    ///     params:
-    ///         key1=value1
     #[arg(value_parser = parse_kv_pairs)]
-    body: Vec<KvPair>
+    body: Vec<KvPair>,
 }
 
-#[derive(Debug,Clone)]
+#[derive(Args)]
+struct Put {
+    #[arg(value_parser = parse_url)]
+    url: String,
+    #[arg(value_parser = parse_kv_pairs)]
+    body: Vec<KvPair>,
+}
+
+#[derive(Args)]
+struct Delete {
+    #[arg(value_parser = parse_url)]
+    url: String,
+}
+
+#[derive(Args)]
+struct Head {
+    #[arg(value_parser = parse_url)]
+    url: String,
+}
+
+#[derive(Args)]
+struct Patch {
+    #[arg(value_parser = parse_url)]
+    url: String,
+    #[arg(value_parser = parse_kv_pairs)]
+    body: Vec<KvPair>,
+}
+
+#[derive(Debug, Clone)]
 enum KvPairType {
     Header,
     Param,
@@ -71,7 +99,7 @@ impl FromStr for KvPair {
         };
 
         let mut split = s.split(split_char);
-        let err = || anyhow!(format!("failed to parse pairs {}",s));
+        let err = || anyhow!("failed to parse pairs {}", s);
         Ok(Self {
             k: (split.next().ok_or_else(err)?).to_string(),
             v: (split.next().ok_or_else(err)?).to_string(),
@@ -79,7 +107,6 @@ impl FromStr for KvPair {
         })
     }
 }
-
 
 fn parse_url(s: &str) -> anyhow::Result<String> {
     let _url: Url = s.parse()?;
@@ -90,34 +117,76 @@ fn parse_kv_pairs(s: &str) -> anyhow::Result<KvPair> {
     Ok(s.parse()?)
 }
 
-async fn get(client: Client, args: &Get) -> anyhow::Result<()> {
-   let resp = client.get(&args.url).send().await?;
-    Ok(print_resp(resp).await?)
-}
-
-async fn post(client: Client, args: &Post) -> anyhow::Result<()> {
-    let mut body = HashMap::new();
-    let mut header_map = HeaderMap::new();
-    for pair in args.body.iter() {
+fn build_request<'a>(_client: &Client, _url: &str, body: &'a [KvPair]) -> anyhow::Result<(HashMap<&'a str, &'a str>, HeaderMap)> {
+    let mut params = HashMap::new();
+    let mut headers = HeaderMap::new();
+    for pair in body {
         match pair.t {
-            KvPairType::Param =>  {body.insert(&pair.k, &pair.v);}
+            KvPairType::Param => {
+                params.insert(pair.k.as_str(), pair.v.as_str());
+            }
             KvPairType::Header => {
                 if let Ok(name) = HeaderName::from_str(pair.k.as_str()) {
                     if let Ok(value) = HeaderValue::from_str(pair.v.as_str()) {
-                        header_map.insert(name,value);
+                        headers.insert(name, value);
                     } else {
-                        println!("Invalid header value for key: {}", pair.v);
+                        eprintln!("Invalid header value for key: {}", pair.v);
                     }
                 } else {
-                    println!("Invalid header key: {}", pair.k);
+                    eprintln!("Invalid header key: {}", pair.k);
                 }
             }
         }
     }
-    let resp = client.post(&args.url)
-        .headers(header_map)
-        .json(&body).send().await?;
-    Ok(print_resp(resp).await?)
+    Ok((params, headers))
+}
+
+async fn get(client: Client, args: &Get) -> anyhow::Result<()> {
+    let resp = client.get(&args.url).send().await?;
+    print_resp(resp).await
+}
+
+async fn post(client: Client, args: &Post) -> anyhow::Result<()> {
+    let (body, headers) = build_request(&client, &args.url, &args.body)?;
+    let resp = client
+        .post(&args.url)
+        .headers(headers)
+        .json(&body)
+        .send()
+        .await?;
+    print_resp(resp).await
+}
+
+async fn put(client: Client, args: &Put) -> anyhow::Result<()> {
+    let (body, headers) = build_request(&client, &args.url, &args.body)?;
+    let resp = client
+        .put(&args.url)
+        .headers(headers)
+        .json(&body)
+        .send()
+        .await?;
+    print_resp(resp).await
+}
+
+async fn delete(client: Client, args: &Delete) -> anyhow::Result<()> {
+    let resp = client.delete(&args.url).send().await?;
+    print_resp(resp).await
+}
+
+async fn head(client: Client, args: &Head) -> anyhow::Result<()> {
+    let resp = client.head(&args.url).send().await?;
+    print_resp(resp).await
+}
+
+async fn patch(client: Client, args: &Patch) -> anyhow::Result<()> {
+    let (body, headers) = build_request(&client, &args.url, &args.body)?;
+    let resp = client
+        .patch(&args.url)
+        .headers(headers)
+        .json(&body)
+        .send()
+        .await?;
+    print_resp(resp).await
 }
 
 async fn print_resp(resp: Response) -> anyhow::Result<()> {
@@ -135,37 +204,42 @@ fn print_status(resp: &Response) {
 }
 
 fn print_headers(resp: &Response) {
-    for (k,v) in resp.headers() {
+    for (k, v) in resp.headers() {
         println!("{}: {:?}", k.to_string().green(), v);
     }
-    print!("\n");
+    println!();
 }
 
-fn print_body(mime: Option<Mime>, resp: &String) {
+fn print_body(mime: Option<mime::Mime>, body: &str) {
     match mime {
-        Some(v) => {
-            if v == mime::APPLICATION_JSON {
-                println!("{}", jsonxf::pretty_print(resp).unwrap().cyan())
+        Some(v) if v == mime::APPLICATION_JSON => {
+            match jsonxf::pretty_print(body) {
+                Ok(formatted) => println!("{}", formatted.cyan()),
+                Err(_) => println!("{}", body),
             }
         }
-        _ => print!("{}", resp),
+        _ => print!("{}", body),
     }
 }
 
-fn get_content_type(resp: &Response) -> Option<Mime> {
+fn get_content_type(resp: &Response) -> Option<mime::Mime> {
     resp.headers()
         .get(header::CONTENT_TYPE)
-        .map(|v|v.to_str().unwrap().parse().unwrap())
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.parse().ok())
 }
 
-
 #[tokio::main]
-async fn main() -> anyhow::Result<()>{
+async fn main() -> anyhow::Result<()> {
     let httpie = Httpie::parse();
     let client = Client::new();
-    let result = match httpie.methods {
+    match httpie.methods {
         Method::Get(ref args) => get(client, args).await?,
         Method::Post(ref args) => post(client, args).await?,
-    };
-    Ok(result)
+        Method::Put(ref args) => put(client, args).await?,
+        Method::Delete(ref args) => delete(client, args).await?,
+        Method::Head(ref args) => head(client, args).await?,
+        Method::Patch(ref args) => patch(client, args).await?,
+    }
+    Ok(())
 }
