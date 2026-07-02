@@ -3,11 +3,21 @@ mod syntax;
 use crate::datatype::{array_data::get_array, struct_data::Site};
 use clap::{arg, Arg, ArgAction, Command};
 use syntax::generics::show_generic;
-#[derive(Debug)]
 
+#[derive(Debug)]
 struct Rectangle {
     width: u32,
     height: u32,
+}
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
 }
 
 fn main_struct() {
@@ -21,18 +31,36 @@ fn main_struct() {
         width: 30,
         height: 50,
     };
+    let rect2 = Rectangle {
+        width: 10,
+        height: 20,
+    };
 
-    println!("rect1 is {:?}", rect1);
-    let int_data = 111;
+    println!("rect1 is {:?}, area: {}", rect1, rect1.area());
+    println!("rect1 can hold rect2: {}", rect1.can_hold(&rect2));
     println!("struct data {:?}", runoob);
-    println!("helll{0}", int_data);
     println!("Hello, world!");
     get_array();
 }
 
+/// Parse a string to a number, returning None on failure
+fn parse_number(s: &str) -> Option<i32> {
+    s.parse::<i32>().ok()
+}
 
+/// Sum an array using iterator
+fn sum_array(arr: &[i32]) -> i32 {
+    arr.iter().sum()
+}
 
-
+/// String utility: capitalize first letter
+fn capitalize(s: &str) -> String {
+    let mut chars = s.chars();
+    match chars.next() {
+        None => String::new(),
+        Some(c) => c.to_uppercase().to_string() + chars.as_str(),
+    }
+}
 
 fn main() {
     let matches = Command::new("basic")
@@ -40,9 +68,6 @@ fn main() {
         .version("5.2.1")
         .subcommand_required(true)
         .arg_required_else_help(true)
-        // Query subcommand
-        //
-        // Only a few of its arguments are implemented below.
         .subcommand(
             Command::new("query")
                 .short_flag('Q')
@@ -67,9 +92,6 @@ fn main() {
                         .num_args(1..),
                 ),
         )
-        // Sync subcommand
-        //
-        // Only a few of its arguments are implemented below.
         .subcommand(
             Command::new("sync")
                 .short_flag('S')
@@ -102,6 +124,17 @@ fn main() {
                 ),
         )
         .subcommand(Command::new("generic"))
+        .subcommand(
+            Command::new("demo")
+                .about("Show various Rust feature demos")
+                .arg(
+                    Arg::new("feature")
+                        .short('f')
+                        .long("feature")
+                        .help("Feature to demo: struct, array, string, all")
+                        .default_value("all"),
+                ),
+        )
         .get_matches();
 
     match matches.subcommand() {
@@ -141,9 +174,32 @@ fn main() {
                 println!("Displaying all locally installed packages...");
             }
         }
-        Some(("generic",_))=>{
+        Some(("generic", _)) => {
             show_generic();
         }
-        _ => unreachable!(), // If all subcommands are defined above, anything else is unreachable
+        Some(("demo", demo_matches)) => {
+            let feature = demo_matches
+                .get_one::<String>("feature")
+                .map(|s| s.as_str())
+                .unwrap_or("all");
+            match feature {
+                "struct" => main_struct(),
+                "array" => get_array(),
+                "string" => {
+                    let text = "hello world";
+                    println!("Original: {}", text);
+                    println!("Capitalized: {}", capitalize(text));
+                    println!("Parse '42': {:?}", parse_number("42"));
+                    println!("Sum of [1,2,3,4,5]: {}", sum_array(&[1, 2, 3, 4, 5]));
+                }
+                _ => {
+                    main_struct();
+                    get_array();
+                    println!("Sum of [10,20,30]: {}", sum_array(&[10, 20, 30]));
+                    println!("Capitalized 'rust': {}", capitalize("rust"));
+                }
+            }
+        }
+        _ => unreachable!(),
     }
 }

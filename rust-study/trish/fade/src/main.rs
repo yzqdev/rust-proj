@@ -1,23 +1,15 @@
 pub mod use_trait;
- use std::fs::File;
-use std::{env, io};
-use rand::Rng ;
+use std::env;
+
 fn main() {
     let args: Vec<String> = env::args().collect();
-    println!("{:?}",args    );
-   let a = [10, 20, 30, 40, 50];
-   for item  in 1..2   {
-       println!("{}",item)
-   }
- 
-   use_trait::use_trait();
-   file_opera();
-}
+    println!("Args: {:?}", args);
 
+    use_trait::use_trait();
 
-
-fn file_opera() {
-    let f = File::open("hello.txt").unwrap();
-
-     
+    // Demonstrate new utilities
+    let s = "A man, a plan, a canal, Panama";
+    println!("Is palindrome: {}", fade::str_util::is_palindrome(s));
+    println!("Factorial of 10: {}", fade::math_util::factorial(10));
+    println!("Random string: {}", fade::rand_util::random_string(12));
 }

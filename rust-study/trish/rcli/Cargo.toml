@@ -10,3 +10,4 @@ edition = "2024"
 #bench = false
 [dependencies]
 clap = { version = "^4.5.4", features = ["derive", "cargo"] }
+rand = "0.8.5"

@@ -1,7 +1,7 @@
 use ratatui::{
-    layout::Alignment,
-    style::{Color, Style},
-    widgets::{Block, BorderType, Borders, Paragraph},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
+    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph, Gauge},
     Frame,
 };
 
@@ -9,27 +9,83 @@ use crate::app::App;
 
 /// Renders the user interface widgets.
 pub fn render(app: &mut App, frame: &mut Frame) {
-    // This is where you add new widgets.
-    // See the following resources:
-    // - https://docs.rs/ratatui/latest/ratatui/widgets/index.html
-    // - https://github.com/ratatui-org/ratatui/tree/master/examples
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Length(3),
+            Constraint::Min(5),
+            Constraint::Length(3),
+        ])
+        .split(frame.size());
+
+    // Title bar
     frame.render_widget(
-        Paragraph::new(format!(
-            "This is a tui template.\n\
-                Press `Esc`, `Ctrl-C` or `q` to stop running.\n\
-                Press left and right to increment and decrement the counter respectively.\n\
-                Counter: {}",
-            app.counter
-        ))
+        Paragraph::new(format!(" {} - Press 'q' to quit ", app.title))
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Double)
+                    .style(Style::default().fg(Color::Cyan)),
+            )
+            .style(Style::default().fg(Color::White))
+            .alignment(Alignment::Center),
+        chunks[0],
+    );
+
+    // Counter section
+    let counter_text = format!("Counter: {}  |  ← → to change  |  r to reset", app.counter);
+    let progress = f64::from(app.counter) / 10.0;
+    frame.render_widget(
+        Paragraph::new(counter_text)
+            .block(
+                Block::default()
+                    .title(" Counter ")
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded),
+            )
+            .style(Style::default().fg(Color::Yellow)),
+        chunks[1],
+    );
+
+    // Item list
+    let items: Vec<ListItem> = app
+        .items
+        .iter()
+        .enumerate()
+        .map(|(i, item)| {
+            let style = if i == app.selected {
+                Style::default()
+                    .fg(Color::Black)
+                    .bg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(Color::White)
+            };
+            ListItem::new(format!(" {} ", item)).style(style)
+        })
+        .collect();
+
+    let list = List::new(items)
         .block(
             Block::default()
-                .title("Template")
-                .title_alignment(Alignment::Center)
+                .title(" Items (↑ ↓ to navigate) ")
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded),
         )
-        .style(Style::default().fg(Color::Cyan).bg(Color::Black))
-        .alignment(Alignment::Center),
-        frame.size(),
-    )
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD));
+
+    frame.render_widget(list, chunks[2]);
+
+    // Help bar
+    frame.render_widget(
+        Paragraph::new(" q: quit | ← →: counter | ↑ ↓: select | r: reset | Esc: quit ")
+            .block(
+                Block::default()
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded),
+            )
+            .style(Style::default().fg(Color::Gray)),
+        chunks[3],
+    );
 }

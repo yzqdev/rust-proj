@@ -21,6 +21,17 @@ pub fn handle_key_events(key_event: KeyEvent, app: &mut App) -> AppResult<()> {
         KeyCode::Left => {
             app.decrement_counter();
         }
+        // Navigation
+        KeyCode::Up => {
+            app.previous_item();
+        }
+        KeyCode::Down => {
+            app.next_item();
+        }
+        // Reset counter
+        KeyCode::Char('r') => {
+            app.reset_counter();
+        }
         // Other handlers you could add here.
         _ => {}
     }

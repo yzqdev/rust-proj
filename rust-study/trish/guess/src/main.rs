@@ -1,17 +1,12 @@
-use std::ffi::OsStr;
-use std::ffi::OsString;
-use std::path::PathBuf;
+use clap::{Parser, Subcommand};
+use md5::Digest;
+use guess::core;
+use guess::util;
 
-use clap::{Args, Parser, Subcommand, ValueEnum};
-mod command;
-mod core;
-mod simple;
-mod util;
-
-/// A fictional versioning CLI
-#[derive(Debug, Parser)] // requires `derive` feature
-#[command(name = "git")]
-#[command(about = "A fictional versioning CLI", long_about = None)]
+/// Guess CLI - A multi-purpose command tool
+#[derive(Debug, Parser)]
+#[command(name = "guess")]
+#[command(about = "A multi-purpose CLI tool", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -19,151 +14,81 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Commands {
-    /// Clones repos
-    #[command(arg_required_else_help = true)]
-    Clone {
-        /// The remote to clone
-        remote: String,
+    /// Calculate MD5 hash of a string
+    Hash {
+        /// The string to hash
+        text: String,
     },
-    /// Compare two commits
-    Diff {
-        #[arg(value_name = "COMMIT")]
-        base: Option<OsString>,
-        #[arg(value_name = "COMMIT")]
-        head: Option<OsString>,
-        #[arg(last = true)]
-        path: Option<OsString>,
-        #[arg(
-            long,
-            require_equals = true,
-            value_name = "WHEN",
-            num_args = 0..=1,
-            default_value_t = ColorWhen::Auto,
-            default_missing_value = "always",
-            value_enum
-        )]
-        color: ColorWhen,
+    /// Make an HTTP request
+    Fetch {
+        /// URL to fetch
+        url: String,
     },
-    /// pushes things
-    #[command(arg_required_else_help = true)]
-    Push {
-        /// The remote to target
-        remote: String,
+    /// Generate a random number
+    Random {
+        /// Minimum value
+        #[arg(short, long, default_value_t = 1)]
+        min: i32,
+        /// Maximum value
+        #[arg(short, long, default_value_t = 100)]
+        max: i32,
     },
-    /// adds things
-    #[command(arg_required_else_help = true)]
-    Add {
-        /// Stuff to add
-        #[arg(required = true)]
-        path: Vec<PathBuf>,
+    /// Read and display a text file
+    Read {
+        /// File path
+        path: String,
     },
-    Stash(StashArgs),
-    #[command(external_subcommand)]
-    External(Vec<OsString>),
-}
-
-#[derive(ValueEnum, Copy, Clone, Debug, PartialEq, Eq)]
-enum ColorWhen {
-    Always,
-    Auto,
-    Never,
-}
-
-impl std::fmt::Display for ColorWhen {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.to_possible_value()
-            .expect("no values are skipped")
-            .get_name()
-            .fmt(f)
-    }
-}
-
-#[derive(Debug, Args)]
-#[command(args_conflicts_with_subcommands = true)]
-#[command(flatten_help = true)]
-struct StashArgs {
-    #[command(subcommand)]
-    command: Option<StashCommands>,
-
-    #[command(flatten)]
-    push: StashPushArgs,
-}
-
-#[derive(Debug, Subcommand)]
-enum StashCommands {
-    Push(StashPushArgs),
-    Pop { stash: Option<String> },
-    Apply { stash: Option<String> },
-}
-
-#[derive(Debug, Args)]
-struct StashPushArgs {
-    #[arg(short, long)]
-    message: Option<String>,
+    /// Show system information
+    Info,
+    /// Run core demo
+    Core,
 }
 
 fn main() {
-    let args = Cli::parse();
+    let cli = Cli::parse();
 
-    match args.command {
-        Commands::Clone { remote } => {
-            println!("Cloning {remote}");
+    match cli.command {
+        Commands::Hash { text } => {
+            let digest = md5::Md5::digest(text.as_bytes());
+            println!("MD5({:?}) = {:x}", text, digest);
         }
-        Commands::Diff {
-            mut base,
-            mut head,
-            mut path,
-            color,
-        } => {
-            if path.is_none() {
-                path = head;
-                head = None;
-                if path.is_none() {
-                    path = base;
-                    base = None;
+        Commands::Fetch { url } => {
+            println!("Fetching {} ...", url);
+            // note: reqwest needs tokio runtime
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(async {
+                match reqwest::get(&url).await {
+                    Ok(resp) => {
+                        println!("Status: {}", resp.status());
+                        if let Ok(body) = resp.text().await {
+                            println!("Body (first 500 chars):");
+                            let preview: String = body.chars().take(500).collect();
+                            println!("{}", preview);
+                        }
+                    }
+                    Err(e) => eprintln!("Request failed: {}", e),
                 }
-            }
-            let base = base
-                .as_deref()
-                .map(|s| s.to_str().unwrap())
-                .unwrap_or("stage");
-            let head = head
-                .as_deref()
-                .map(|s| s.to_str().unwrap())
-                .unwrap_or("worktree");
-            let path = path.as_deref().unwrap_or_else(|| OsStr::new(""));
-            println!(
-                "Diffing {}..{} {} (color={})",
-                base,
-                head,
-                path.to_string_lossy(),
-                color
-            );
+            });
         }
-        Commands::Push { remote } => {
-            println!("Pushing to {remote}");
+        Commands::Random { min, max } => {
+            use rand::Rng;
+            let num = rand::thread_rng().gen_range(min..=max);
+            println!("Random number ({}..={}): {}", min, max, num);
         }
-        Commands::Add { path } => {
-            println!("Adding {path:?}");
-        }
-        Commands::Stash(stash) => {
-            let stash_cmd = stash.command.unwrap_or(StashCommands::Push(stash.push));
-            match stash_cmd {
-                StashCommands::Push(push) => {
-                    println!("Pushing {push:?}");
-                }
-                StashCommands::Pop { stash } => {
-                    println!("Popping {stash:?}");
-                }
-                StashCommands::Apply { stash } => {
-                    println!("Applying {stash:?}");
-                }
+        Commands::Read { path } => {
+            match std::fs::read_to_string(&path) {
+                Ok(content) => println!("{}", content),
+                Err(e) => eprintln!("Failed to read {}: {}", path, e),
             }
         }
-        Commands::External(args) => {
-            println!("Calling out to {:?} with {:?}", &args[0], &args[1..]);
+        Commands::Info => {
+            println!("=== System Info ===");
+            println!("OS: {}", std::env::consts::OS);
+            println!("Arch: {}", std::env::consts::ARCH);
+            println!("Current dir: {:?}", std::env::current_dir().unwrap_or_default());
+        }
+        Commands::Core => {
+            core::hyper::main_core();
         }
     }
-
-    // Continued program logic goes here...
 }

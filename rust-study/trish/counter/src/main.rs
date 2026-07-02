@@ -1,36 +1,52 @@
 use ratatui::{
     prelude::{CrosstermBackend, Terminal},
-    widgets::Paragraph,
+    widgets::{Block, Borders, Paragraph},
+    layout::{Layout, Direction, Constraint},
+    style::{Style, Color},
 };
+use crossterm::event::{KeyCode, KeyEventKind};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // startup: Enable raw mode for the terminal, giving us fine control over user input
     crossterm::terminal::enable_raw_mode()?;
     crossterm::execute!(std::io::stderr(), crossterm::terminal::EnterAlternateScreen)?;
 
-    // Initialize the terminal backend using crossterm
     let mut terminal = Terminal::new(CrosstermBackend::new(std::io::stderr()))?;
 
-    // Define our counter variable
-    // This is the state of our application
     let mut counter = 0;
+    let mut step = 1;
 
-    // Main application loop
     loop {
-        // Render the UI
         terminal.draw(|f| {
-            f.render_widget(Paragraph::new(format!("Counter: {counter}")), f.size());
+            let chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(3), Constraint::Length(3), Constraint::Min(0)])
+                .split(f.size());
+
+            let counter_text = format!("Counter: {}", counter);
+            let info_text = format!("Step: {} | j/k: +/- | 1-9: set step | r: reset | q: quit", step);
+
+            let counter_widget = Paragraph::new(counter_text)
+                .block(Block::default().title(" Counter ").borders(Borders::ALL))
+                .style(Style::default().fg(Color::Cyan));
+            let info_widget = Paragraph::new(info_text)
+                .block(Block::default().title(" Controls ").borders(Borders::ALL))
+                .style(Style::default().fg(Color::Gray));
+
+            f.render_widget(counter_widget, chunks[0]);
+            f.render_widget(info_widget, chunks[1]);
         })?;
 
-        // Check for user input every 250 milliseconds
         if crossterm::event::poll(std::time::Duration::from_millis(250))? {
-            // If a key event occurs, handle it
             if let crossterm::event::Event::Key(key) = crossterm::event::read()? {
-                if key.kind == crossterm::event::KeyEventKind::Press {
+                if key.kind == KeyEventKind::Press {
                     match key.code {
-                        crossterm::event::KeyCode::Char('j') => counter += 1,
-                        crossterm::event::KeyCode::Char('k') => counter -= 1,
-                        crossterm::event::KeyCode::Char('q') => break,
+                        KeyCode::Char('j') => counter += step,
+                        KeyCode::Char('k') => counter -= step,
+                        KeyCode::Char('r') => counter = 0,
+                        KeyCode::Char('q') => break,
+                        KeyCode::Char(c) if c.is_ascii_digit() && c != '0' => {
+                            step = c.to_digit(10).unwrap() as i32;
+                        }
                         _ => {}
                     }
                 }
@@ -38,9 +54,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    // shutdown down: reset terminal back to original state
     crossterm::execute!(std::io::stderr(), crossterm::terminal::LeaveAlternateScreen)?;
     crossterm::terminal::disable_raw_mode()?;
-
     Ok(())
 }
