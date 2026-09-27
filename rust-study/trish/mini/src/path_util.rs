@@ -10,8 +10,7 @@ pub fn get_extension(path_str: &str) -> Option<String> {
 /// Get the parent directory from a path string
 pub fn get_parent(path_str: &str) -> Option<String> {
     let path = Path::new(path_str);
-    path.parent()
-        .map(|p| p.to_string_lossy().to_string())
+    path.parent().map(|p| p.to_string_lossy().to_string())
 }
 
 /// Check if a path is absolute

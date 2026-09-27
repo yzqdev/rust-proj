@@ -1,3 +1,6 @@
+// 上游教学代码：保留原有断言风格。
+#![allow(clippy::bool_assert_comparison)]
+
 extern crate minigrep;
 
 use minigrep::*;

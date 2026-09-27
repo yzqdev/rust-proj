@@ -1,8 +1,18 @@
 [package]
 name = "sampo"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "A fictional versioning CLI (clap builder API variant)"
 
 [dependencies]
-clap = { version = "4.5.30", features = ["derive","cargo"] }
-chrono = "0.4"
+clap.workspace = true
+clap_complete.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true
+
+[lints]
+workspace = true

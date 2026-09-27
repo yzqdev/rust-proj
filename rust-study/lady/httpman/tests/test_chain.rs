@@ -9,8 +9,8 @@ fn test_iter() {
     split_word!(true; or false);
 }
 #[test]
-fn find_min_num(){
-     println!("{}", find_min!(1u32));
-    println!("{}", find_min!(1u32 + 2 , 2u32));
+fn find_min_num() {
+    println!("{}", find_min!(1u32));
+    println!("{}", find_min!(1u32 + 2, 2u32));
     println!("{}", find_min!(5u32, 2u32 * 3, 4u32));
 }

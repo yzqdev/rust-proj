@@ -1,3 +1,6 @@
+// 教学示例：演示 fmt::Display / trait 的基本用法。
+#![allow(dead_code, unused_variables)]
+
 // （使用 `use`）导入 `fmt` 模块使 `fmt::Display` 可用
 use std::{env, fmt};
 
@@ -8,15 +11,15 @@ struct Dog {
     value: String,
 }
 trait Animal {
-    fn new(val: &str)->Self;
+    fn new(val: &str) -> Self;
     fn say(&self);
     fn bite(&self);
 }
- impl Dog {
-     fn shoot(&self){
+impl Dog {
+    fn shoot(&self) {
         println!("shoot at me");
-     }
- }
+    }
+}
 impl Animal for Dog {
     fn say(&self) {
         print!("hello")
@@ -25,8 +28,8 @@ impl Animal for Dog {
     fn bite(&self) {
         println!("heeee")
     }
-    
-     fn new(val: &str) ->Self{
+
+    fn new(val: &str) -> Self {
         Dog {
             name: val.to_string(),
             value: val.to_string(),
@@ -40,16 +43,19 @@ impl fmt::Display for Dog {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // 仅将 self 的第一个元素写入到给定的输出流 `f`。返回 `fmt:Result`，此
         // 结果表明操作成功或失败。注意 `write!` 的用法和 `println!` 很相似。
-        write!(f, "{}", self. name)
+        write!(f, "{}", self.name)
     }
 }
 #[test]
 fn test_dp() {
-    let a :Dog  = Animal::new("diplay");
+    let a: Dog = Animal::new("diplay");
     println!("{}", a);
     a.say();
     a.shoot();
-    let is_win=cfg!(windows);
-    println!("{}",is_win);
-    println!("{}",env::var("android_proj").unwrap());
+    let is_win = cfg!(windows);
+    println!("{}", is_win);
+    println!(
+        "{}",
+        env::var("android_proj").unwrap_or_else(|_| "(unset)".to_string())
+    );
 }

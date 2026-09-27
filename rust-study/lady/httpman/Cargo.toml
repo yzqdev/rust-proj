@@ -1,18 +1,23 @@
 [package]
 name = "httpman"
-version = "0.1.0"
-edition = "2024"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "HTTP client CLI - make HTTP requests from the terminal (get/post/put/delete/head/patch)"
 
 [dependencies]
-md-5 = "0.10.1"
-hex-literal = "0.4.1"
-digest = "0.10.3"
-clap = { version = "4.5.30", features = ["derive","cargo"] }
-colored = "3.0.0"
-jsonxf = "1.1.1"
-mime = "0.3.17"
-anyhow = "1.0.80"
-reqwest = { version = "0.12.12", features = ["json"] }
-tokio = { version = "1.36.0", features = ["rt", "rt-multi-thread", "macros"] }
+anyhow.workspace = true
+clap.workspace = true
+clap_complete.workspace = true
+colored.workspace = true
+jsonxf.workspace = true
+mime.workspace = true
+reqwest.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true
+
+[lints]
+workspace = true

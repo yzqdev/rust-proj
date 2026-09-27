@@ -1,7 +1,7 @@
 use clap::Parser;
 use colored::*;
-use minigrep::*;
 use minigrep::options::Options;
+use minigrep::*;
 use std::fs;
 use std::io::Read;
 use std::process;
@@ -39,8 +39,12 @@ pub fn main() {
     let _options = Options::new(args.insensitive, args.exact_word);
     // Build options string for legacy parse_config
     let mut opt_str = String::new();
-    if args.insensitive { opt_str.push('i'); }
-    if args.exact_word { opt_str.push('w'); }
+    if args.insensitive {
+        opt_str.push('i');
+    }
+    if args.exact_word {
+        opt_str.push('w');
+    }
 
     // If no files specified, try to read from stdin
     let files: Vec<String> = if args.file.is_empty() {
@@ -104,7 +108,12 @@ fn search_and_print(args: &Args, content: &str, file_path: &str, multi_file: boo
                 let mut pos = 0;
                 while let Some(idx) = lower_line[pos..].find(&lower_q) {
                     result.push_str(&line[pos..pos + idx]);
-                    result.push_str(&line[pos + idx..pos + idx + query.len()].green().bold().to_string());
+                    result.push_str(
+                        &line[pos + idx..pos + idx + query.len()]
+                            .green()
+                            .bold()
+                            .to_string(),
+                    );
                     pos += idx + query.len();
                 }
                 result.push_str(&line[pos..]);
@@ -114,7 +123,12 @@ fn search_and_print(args: &Args, content: &str, file_path: &str, multi_file: boo
                 let mut pos = 0;
                 while let Some(idx) = line[pos..].find(query) {
                     result.push_str(&line[pos..pos + idx]);
-                    result.push_str(&line[pos + idx..pos + idx + query.len()].green().bold().to_string());
+                    result.push_str(
+                        &line[pos + idx..pos + idx + query.len()]
+                            .green()
+                            .bold()
+                            .to_string(),
+                    );
                     pos += idx + query.len();
                 }
                 result.push_str(&line[pos..]);

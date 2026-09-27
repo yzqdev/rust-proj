@@ -67,7 +67,10 @@ impl App {
 
     /// Select next item
     pub fn next_item(&mut self) {
-        self.selected = self.selected.saturating_add(1).min(self.items.len().saturating_sub(1));
+        self.selected = self
+            .selected
+            .saturating_add(1)
+            .min(self.items.len().saturating_sub(1));
     }
 
     /// Select previous item

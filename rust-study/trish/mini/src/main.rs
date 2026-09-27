@@ -1,17 +1,19 @@
-use clap::{Arg, Command, arg};
-use mini::{files, json_util, string_util, path_util};
+use std::process::ExitCode;
 
-fn main() {
-    let matches = Command::new("mini")
-        .author("Me, me@mail.com")
-        .version("1.0.2")
+use clap::{Command, arg, command};
+use clap_complete::Shell;
+use mini::{files, json_util, path_util, string_util};
+
+fn cli() -> Command {
+    command!("mini")
+        .version(clap::crate_version!())
         .about("Mini utility tool - file, json, string and path operations")
-        .arg(Arg::new("in_file"))
+        .subcommand_required(true)
+        .arg_required_else_help(true)
         .subcommand(
             Command::new("gen")
                 .about("Run generation demo (file ops + json)")
-                .arg(arg!(<REMOTE> "The remote to clone"))
-                .arg_required_else_help(true),
+                .arg(arg!([NAME] "Optional demo name")),
         )
         .subcommand(
             Command::new("string")
@@ -25,6 +27,11 @@ fn main() {
                     Command::new("count")
                         .about("Count words in a string")
                         .arg(arg!(<TEXT> "text to count")),
+                )
+                .subcommand(
+                    Command::new("snake")
+                        .about("Convert to snake_case")
+                        .arg(arg!(<TEXT> "text to convert")),
                 ),
         )
         .subcommand(
@@ -44,63 +51,77 @@ fn main() {
         .subcommand(
             Command::new("json")
                 .about("JSON utilities")
-                .subcommand(
-                    Command::new("encode")
-                        .about("JSON encode demo"),
+                .subcommand(Command::new("encode").about("JSON encode demo")),
+        )
+        .subcommand(
+            Command::new("completions")
+                .about("Generate shell completions")
+                .arg(
+                    arg!(--shell <SHELL> "Shell to generate completions for")
+                        .value_parser(clap::value_parser!(Shell))
+                        .required(true),
                 ),
         )
         .after_help(
             "Longer explanation to appear after the options when \
                  displaying the help information from --help or -h",
         )
-        .get_matches();
+}
 
+fn dispatch(matches: clap::ArgMatches) {
     match matches.subcommand() {
-        Some(("gen", sub_match)) => {
-            println!("hello {:?}", sub_match.get_many::<String>("gen").unwrap());
-            println!("Hello, world!");
+        Some(("gen", _sub_match)) => {
             files::file_control::get_all_lines();
-            json_opera();
+            json_util::json_decode();
         }
-        Some(("string", string_matches)) => {
-            match string_matches.subcommand() {
-                Some(("reverse", m)) => {
-                    let text = m.get_one::<String>("TEXT").expect("required");
-                    println!("{}", string_util::reverse(text));
-                }
-                Some(("count", m)) => {
-                    let text = m.get_one::<String>("TEXT").expect("required");
-                    println!("Word count: {}", string_util::word_count(text));
-                }
-                _ => unreachable!(),
+        Some(("string", string_matches)) => match string_matches.subcommand() {
+            Some(("reverse", m)) => {
+                let text = m.get_one::<String>("TEXT").expect("required by clap");
+                println!("{}", string_util::reverse(text));
             }
-        }
-        Some(("path", path_matches)) => {
-            match path_matches.subcommand() {
-                Some(("ext", m)) => {
-                    let p = m.get_one::<String>("PATH").expect("required");
-                    match path_util::get_extension(p) {
-                        Some(ext) => println!("Extension: {}", ext),
-                        None => println!("No extension found"),
-                    }
-                }
-                Some(("parent", m)) => {
-                    let p = m.get_one::<String>("PATH").expect("required");
-                    match path_util::get_parent(p) {
-                        Some(parent) => println!("Parent: {}", parent),
-                        None => println!("No parent (root or empty path)"),
-                    }
-                }
-                _ => unreachable!(),
+            Some(("count", m)) => {
+                let text = m.get_one::<String>("TEXT").expect("required by clap");
+                println!("Word count: {}", string_util::word_count(text));
             }
-        }
+            Some(("snake", m)) => {
+                let text = m.get_one::<String>("TEXT").expect("required by clap");
+                println!("{}", string_util::to_snake_case(text));
+            }
+            _ => unreachable!("parser should ensure only valid subcommand names are used"),
+        },
+        Some(("path", path_matches)) => match path_matches.subcommand() {
+            Some(("ext", m)) => {
+                let p = m.get_one::<String>("PATH").expect("required by clap");
+                match path_util::get_extension(p) {
+                    Some(ext) => println!("Extension: {ext}"),
+                    None => println!("No extension found"),
+                }
+            }
+            Some(("parent", m)) => {
+                let p = m.get_one::<String>("PATH").expect("required by clap");
+                match path_util::get_parent(p) {
+                    Some(parent) => println!("Parent: {parent}"),
+                    None => println!("No parent (root or empty path)"),
+                }
+            }
+            _ => unreachable!("parser should ensure only valid subcommand names are used"),
+        },
         Some(("json", _)) => {
-            json_opera();
+            json_util::json_decode();
         }
-        _ => todo!(),
+        Some(("completions", m)) => {
+            let shell = m.get_one::<Shell>("shell").expect("required by clap");
+            let mut cmd = cli();
+            let name = cmd.get_name().to_string();
+            let mut out = Vec::new();
+            clap_complete::generate(*shell, &mut cmd, name, &mut out);
+            print!("{}", String::from_utf8_lossy(&out));
+        }
+        _ => unreachable!("subcommand_required(true) makes this unreachable"),
     }
 }
 
-fn json_opera() {
-    json_util::json_decode();
+fn main() -> ExitCode {
+    dispatch(cli().get_matches());
+    ExitCode::SUCCESS
 }

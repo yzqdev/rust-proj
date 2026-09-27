@@ -1,8 +1,8 @@
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph, Gauge},
     Frame,
+    layout::{Alignment, Constraint, Direction, Layout},
+    style::{Color, Modifier, Style},
+    widgets::{Block, BorderType, Borders, List, ListItem, Paragraph},
 };
 
 use crate::app::App;
@@ -17,7 +17,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
             Constraint::Min(5),
             Constraint::Length(3),
         ])
-        .split(frame.size());
+        .split(frame.area());
 
     // Title bar
     frame.render_widget(
@@ -35,7 +35,7 @@ pub fn render(app: &mut App, frame: &mut Frame) {
 
     // Counter section
     let counter_text = format!("Counter: {}  |  ← → to change  |  r to reset", app.counter);
-    let progress = f64::from(app.counter) / 10.0;
+    let _progress = f64::from(app.counter) / 10.0;
     frame.render_widget(
         Paragraph::new(counter_text)
             .block(

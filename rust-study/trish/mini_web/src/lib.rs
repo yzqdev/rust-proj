@@ -42,7 +42,5 @@ pub async fn start_server() -> mini_redis::Result<()> {
         client.publish("notifications", msg.into()).await?;
     }
     println!("Published 3 messages to 'notifications' channel");
-
-    println!("All Redis operations completed successfully!");
     Ok(())
 }

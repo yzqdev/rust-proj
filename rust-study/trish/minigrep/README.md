@@ -1,10 +1,13 @@
 # Minigrep
 
+A fast and simple grep-like text search tool.
+
 ## Requirements
-[Rust-lang](https://www.rust-lang.org/en-US/install.html) should be installed in
-your system.
+
+[Rust-lang](https://www.rust-lang.org/en-US/install.html) should be installed.
 
 ## Installation
+
 ```sh
 git clone https://github.com/subhojit777/minigrep.git
 cd minigrep
@@ -12,41 +15,38 @@ cargo build --release
 ```
 
 ## Usage
+
 ```sh
-./target/release/minigrep -<options> nemo find-nemo-the-movie.txt
+minigrep [OPTIONS] <QUERY> [FILE]...
 ```
 
-Example - `./target/release/minigrep -i nemo find-nemo-the-movie.txt`
+Example - `minigrep --insensitive nemo find-nemo-the-movie.txt`
 
-### Allowed Options
-```
-i - Case-insensitive.
-w - Exact match.
-```
+### Options
+
+| Option | Description |
+| --- | --- |
+| `-i, --insensitive` | Case-insensitive search |
+| `-w, --exact-word` | Whole-word (exact) match |
+| `-c, --count` | Count matches instead of printing them |
+| `-n, --line-number` | Show line numbers |
+
+If no file is given, input is read from stdin.
+Matches are highlighted; when searching multiple files the file name is
+printed as a prefix.
 
 ## Documentation
+
 ```sh
 cargo doc --no-deps --open
 ```
 
-## Run tests
+## Testing
+
 ```sh
 cargo test
 ```
 
-## Note
-This is not a drop in replacement for the good old grep-like commands. This is
-written for the sake of learning Rust-lang.
+## License
 
-## Motivation behind open sourcing
-Actually this is an excersice in [the book](https://doc.rust-lang.org/book/second-edition/ch12-00-an-io-project.html).
-I have open sourced this because I have followed a different implementation than
-what is suggested in the book. [TDD](https://en.wikipedia.org/wiki/Test-driven_development)
-followed while writing the helper libraries.
-
-## What is differently done in `minigrep`?
-- Case-insensitive search can be done by passing an option.
-- Ability to do exact-match search.
-- The query is highlighted in the output.
-
-Feedbacks are welcome :)
+Dual licensed under MIT and Apache-2.0 (see LICENSE-MIT / LICENSE-APACHE).

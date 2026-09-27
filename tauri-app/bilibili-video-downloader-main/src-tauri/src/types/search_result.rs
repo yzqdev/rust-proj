@@ -1,0 +1,46 @@
+use serde::{Deserialize, Serialize};
+use specta::Type;
+
+use super::{
+    bangumi_info::{self, BangumiInfo},
+    cheese_info::{self, CheeseInfo},
+    fav_info::FavInfo,
+    normal_info::NormalInfo,
+    user_video_info::UserVideoInfo,
+};
+
+#[allow(clippy::large_enum_variant)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
+pub enum SearchResult {
+    Normal(NormalSearchResult),
+    Bangumi(BangumiSearchResult),
+    Cheese(CheeseSearchResult),
+    UserVideo(UserVideoSearchResult),
+    Fav(FavSearchResult),
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
+#[serde(default)]
+pub struct NormalSearchResult(pub NormalInfo);
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
+#[serde(default)]
+pub struct BangumiSearchResult {
+    pub ep: Option<bangumi_info::EpInBangumi>,
+    pub info: BangumiInfo,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
+#[serde(default)]
+pub struct CheeseSearchResult {
+    pub ep: Option<cheese_info::EpInCheese>,
+    pub info: CheeseInfo,
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
+#[serde(default)]
+pub struct UserVideoSearchResult(pub UserVideoInfo);
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize, Type)]
+#[serde(default)]
+pub struct FavSearchResult(pub FavInfo);

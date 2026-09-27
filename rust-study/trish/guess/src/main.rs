@@ -1,12 +1,13 @@
+use std::process::ExitCode;
+
+use clap::CommandFactory;
 use clap::{Parser, Subcommand};
-use md5::Digest;
-use guess::core;
-use guess::util;
+use clap_complete::Shell;
+use guess::core_ops;
 
 /// Guess CLI - A multi-purpose command tool
 #[derive(Debug, Parser)]
-#[command(name = "guess")]
-#[command(about = "A multi-purpose CLI tool", long_about = None)]
+#[command(name = "guess", version, author, about = "A multi-purpose CLI tool", long_about = None)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -27,10 +28,10 @@ enum Commands {
     /// Generate a random number
     Random {
         /// Minimum value
-        #[arg(short, long, default_value_t = 1)]
+        #[arg(long, default_value_t = 1)]
         min: i32,
         /// Maximum value
-        #[arg(short, long, default_value_t = 100)]
+        #[arg(long, default_value_t = 100)]
         max: i32,
     },
     /// Read and display a text file
@@ -42,53 +43,48 @@ enum Commands {
     Info,
     /// Run core demo
     Core,
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for
+        #[arg(short, long, value_enum)]
+        shell: Shell,
+    },
 }
 
-fn main() {
+#[tokio::main]
+async fn main() -> ExitCode {
     let cli = Cli::parse();
 
-    match cli.command {
-        Commands::Hash { text } => {
-            let digest = md5::Md5::digest(text.as_bytes());
-            println!("MD5({:?}) = {:x}", text, digest);
-        }
-        Commands::Fetch { url } => {
-            println!("Fetching {} ...", url);
-            // note: reqwest needs tokio runtime
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            rt.block_on(async {
-                match reqwest::get(&url).await {
-                    Ok(resp) => {
-                        println!("Status: {}", resp.status());
-                        if let Ok(body) = resp.text().await {
-                            println!("Body (first 500 chars):");
-                            let preview: String = body.chars().take(500).collect();
-                            println!("{}", preview);
-                        }
-                    }
-                    Err(e) => eprintln!("Request failed: {}", e),
-                }
-            });
-        }
-        Commands::Random { min, max } => {
-            use rand::Rng;
-            let num = rand::thread_rng().gen_range(min..=max);
-            println!("Random number ({}..={}): {}", min, max, num);
-        }
-        Commands::Read { path } => {
-            match std::fs::read_to_string(&path) {
-                Ok(content) => println!("{}", content),
-                Err(e) => eprintln!("Failed to read {}: {}", path, e),
-            }
-        }
-        Commands::Info => {
-            println!("=== System Info ===");
-            println!("OS: {}", std::env::consts::OS);
-            println!("Arch: {}", std::env::consts::ARCH);
-            println!("Current dir: {:?}", std::env::current_dir().unwrap_or_default());
-        }
+    let result = match cli.command {
+        Commands::Hash { text } => Ok(format!("MD5({text:?}) = {}", core_ops::hash_md5(&text))),
+        Commands::Fetch { url } => core_ops::fetch(&url).await,
+        Commands::Random { min, max } => Ok(format!(
+            "Random number ({min}..={max}): {}",
+            core_ops::random_in_range(min, max)
+        )),
+        Commands::Read { path } => core_ops::read_text(&path),
+        Commands::Info => Ok(core_ops::info()),
         Commands::Core => {
-            core::hyper::main_core();
+            guess::core::hyper::main_core();
+            Ok(String::new())
+        }
+        Commands::Completions { shell } => {
+            let mut cmd = Cli::command();
+            let name = cmd.get_name().to_string();
+            let mut out = Vec::new();
+            clap_complete::generate(shell, &mut cmd, name, &mut out);
+            Ok(String::from_utf8_lossy(&out).into_owned())
+        }
+    };
+
+    match result {
+        Ok(output) => {
+            println!("{output}");
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("Error: {err}");
+            ExitCode::FAILURE
         }
     }
 }

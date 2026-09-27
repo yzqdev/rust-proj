@@ -1,13 +1,17 @@
-use clap::{Command, arg};
-use find_file::{Config, main_fun};
-use glob::glob;
-use std::fs;
+use std::process::ExitCode;
 
-fn main() {
-    let cmd = Command::new(env!("CARGO_CRATE_NAME"))
+use clap::{Command, arg};
+use clap_complete::Shell;
+use find_file::{find_by_pattern, find_empty, find_large, find_recent, search};
+
+fn cli() -> Command {
+    Command::new("find_file")
+        .version(clap::crate_version!())
+        .author("yzqdev")
+        .about("Find files by pattern, size, recency or emptiness")
+        .subcommand_required(true)
         .arg_required_else_help(true)
-        .subcommand(Command::new("hostname").about("show hostname part of FQDN"))
-        .subcommand(Command::new("gen"))
+        .subcommand(Command::new("hostname").about("show hostname part of this machine"))
         .subcommand(
             Command::new("png")
                 .about("find png files")
@@ -34,85 +38,119 @@ fn main() {
             Command::new("empty")
                 .about("find empty files and directories")
                 .arg(arg!(<PATH> "search path")),
-        );
+        )
+        .subcommand(
+            Command::new("query")
+                .about("search for lines containing a query in a text file")
+                .arg(arg!(<QUERY> "text to search for"))
+                .arg(arg!(<FILE> "file to search in")),
+        )
+        .subcommand(
+            Command::new("completions")
+                .about("Generate shell completions")
+                .arg(
+                    arg!(--shell <SHELL> "Shell to generate completions for")
+                        .value_parser(clap::value_parser!(Shell))
+                        .required(true),
+                ),
+        )
+}
 
-    match cmd.get_matches().subcommand() {
+fn required(matches: &clap::ArgMatches, id: &str) -> Result<String, String> {
+    matches
+        .get_one::<String>(id)
+        .cloned()
+        .ok_or_else(|| format!("missing required argument `{id}`"))
+}
+
+fn parse_number<T: std::str::FromStr>(value: &str, what: &str) -> Result<T, String> {
+    value
+        .parse::<T>()
+        .map_err(|_| format!("{what} must be a number, got `{value}`"))
+}
+
+fn dispatch(matches: clap::ArgMatches) -> Result<Vec<String>, String> {
+    match matches.subcommand() {
         Some(("hostname", _)) => {
-            let conf = Config {
-                query: "todo!()".to_string(),
-                file_path: r"D:\sciter-js-sdk-main\README.md".to_string(),
-            };
-            main_fun(conf);
+            let name = std::env::var("COMPUTERNAME")
+                .or_else(|_| std::env::var("HOSTNAME"))
+                .unwrap_or_else(|_| "unknown".to_string());
+            Ok(vec![name])
         }
-        Some(("png", png_match)) => {
-            let path = png_match.get_one::<String>("PATH").expect("parser error");
-            let pattern = format!("{}/**/*.png", path);
-            for entry in glob(&pattern).unwrap().flatten() {
-                println!("{}", entry.display());
+        Some(("png", m)) => {
+            let path = required(m, "PATH")?;
+            Ok(find_by_pattern(&path, "png")
+                .into_iter()
+                .map(|p| p.display().to_string())
+                .collect())
+        }
+        Some(("txt", m)) => {
+            let path = required(m, "PATH")?;
+            Ok(find_by_pattern(&path, "txt")
+                .into_iter()
+                .map(|p| p.display().to_string())
+                .collect())
+        }
+        Some(("large", m)) => {
+            let path = required(m, "PATH")?;
+            let size = parse_number(&required(m, "SIZE")?, "size")?;
+            Ok(find_large(&path, size)
+                .into_iter()
+                .map(|(p, s)| format!("{} ({} bytes)", p.display(), s))
+                .collect())
+        }
+        Some(("recent", m)) => {
+            let path = required(m, "PATH")?;
+            let days = parse_number(&required(m, "DAYS")?, "days")?;
+            Ok(find_recent(&path, days)
+                .into_iter()
+                .map(|p| p.display().to_string())
+                .collect())
+        }
+        Some(("empty", m)) => {
+            let path = required(m, "PATH")?;
+            Ok(find_empty(&path)
+                .into_iter()
+                .map(|(p, kind)| match kind {
+                    "dir" => format!("[dir]  {}", p.display()),
+                    _ => format!("[file] {}", p.display()),
+                })
+                .collect())
+        }
+        Some(("query", m)) => {
+            let query = required(m, "QUERY")?;
+            let file = required(m, "FILE")?;
+            let contents =
+                std::fs::read_to_string(&file).map_err(|e| format!("cannot read `{file}`: {e}"))?;
+            Ok(search(&query, &contents)
+                .into_iter()
+                .map(str::to_string)
+                .collect())
+        }
+        Some(("completions", m)) => {
+            let shell = m.get_one::<Shell>("shell").expect("required by clap");
+            let mut cmd = cli();
+            let name = cmd.get_name().to_string();
+            let mut out = Vec::new();
+            clap_complete::generate(*shell, &mut cmd, name, &mut out);
+            Ok(vec![String::from_utf8_lossy(&out).into_owned()])
+        }
+        // `subcommand_required(true)` makes this unreachable.
+        _ => Err("no subcommand given".into()),
+    }
+}
+
+fn main() -> ExitCode {
+    match dispatch(cli().get_matches()) {
+        Ok(lines) => {
+            for line in lines {
+                println!("{line}");
             }
+            ExitCode::SUCCESS
         }
-        Some(("txt", txt_match)) => {
-            let path = txt_match.get_one::<String>("PATH").expect("parser error");
-            let pattern = format!("{}/**/*.txt", path);
-            for entry in glob(&pattern).unwrap().flatten() {
-                println!("{}", entry.display());
-            }
+        Err(message) => {
+            eprintln!("Error: {message}");
+            ExitCode::FAILURE
         }
-        Some(("large", large_match)) => {
-            let path = large_match.get_one::<String>("PATH").expect("parser error");
-            let size: u64 = large_match
-                .get_one::<String>("SIZE")
-                .expect("parser error")
-                .parse()
-                .expect("size must be a number");
-            let pattern = format!("{}/**/*", path);
-            for entry in glob(&pattern).unwrap().flatten() {
-                if let Ok(meta) = fs::metadata(&entry) {
-                    if meta.len() > size {
-                        println!("{} ({} bytes)", entry.display(), meta.len());
-                    }
-                }
-            }
-        }
-        Some(("recent", recent_match)) => {
-            let path = recent_match.get_one::<String>("PATH").expect("parser error");
-            let days: u64 = recent_match
-                .get_one::<String>("DAYS")
-                .expect("parser error")
-                .parse()
-                .expect("days must be a number");
-            let now = std::time::SystemTime::now();
-            let duration = std::time::Duration::from_secs(days * 24 * 3600);
-            let threshold = now - duration;
-            let pattern = format!("{}/**/*", path);
-            for entry in glob(&pattern).unwrap().flatten() {
-                if let Ok(meta) = fs::metadata(&entry) {
-                    if let Ok(modified) = meta.modified() {
-                        if modified > threshold {
-                            println!("{}", entry.display());
-                        }
-                    }
-                }
-            }
-        }
-        Some(("empty", empty_match)) => {
-            let path = empty_match.get_one::<String>("PATH").expect("parser error");
-            let pattern = format!("{}/**/*", path);
-            for entry in glob(&pattern).unwrap().flatten() {
-                if entry.is_dir() {
-                    if entry.read_dir().map(|mut d| d.next().is_none()).unwrap_or(false) {
-                        println!("[dir]  {}", entry.display());
-                    }
-                } else if let Ok(meta) = fs::metadata(&entry) {
-                    if meta.len() == 0 {
-                        println!("[file] {}", entry.display());
-                    }
-                }
-            }
-        }
-        Some(("gen", _)) => {
-            println!("gen")
-        }
-        _ => unreachable!("parser should ensure only valid subcommand names are used"),
     }
 }

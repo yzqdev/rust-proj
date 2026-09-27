@@ -1,3 +1,6 @@
+// 教学示例：演示结构体与枚举。
+#![allow(dead_code)]
+
 #[derive(Debug)]
 pub struct Site {
     pub domain: String,

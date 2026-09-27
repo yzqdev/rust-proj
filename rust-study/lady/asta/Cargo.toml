@@ -1,11 +1,19 @@
 [package]
 name = "asta"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Hash calculator CLI (MD5, SHA256) for strings and files"
 
 [dependencies]
-md-5 = "0.10.1"
-sha2 = "0.10.8"
-hex-literal = "0.4.1"
-digest = "0.10.3"
-clap = { version = "4.5.30", features = ["derive","cargo"] }
+hash-utils = { path = "../hash-utils" }
+clap.workspace = true
+clap_complete.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true
+
+[lints]
+workspace = true

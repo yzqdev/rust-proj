@@ -1,3 +1,7 @@
+// 教学示例。
+#![allow(unused_variables, unused_assignments)]
+#![allow(clippy::all)]
+
 use clap::Parser;
 
 /// Simple program to greet a person
@@ -13,7 +17,8 @@ struct Args {
     count: u8,
 }
 
-fn simple_cmd() {
+/// Teaching example (not wired to the CLI): a standalone clap derive parser.
+pub fn simple_cmd() {
     let args = Args::parse();
 
     for i in 0..args.count {

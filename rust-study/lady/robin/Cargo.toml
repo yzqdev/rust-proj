@@ -1,11 +1,20 @@
 [package]
 name = "robin"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "File utility CLI (file hashes, file info, directory trees)"
 
 [dependencies]
-md-5 = "0.10.1"
-hex-literal = "1.0.0"
-digest = "0.10.3"
-clap = { version = "4.5.30", features = ["derive","cargo"] }
-colored = "3.0.0"
+hash-utils = { path = "../hash-utils" }
+clap.workspace = true
+clap_complete.workspace = true
+colored.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true
+
+[lints]
+workspace = true

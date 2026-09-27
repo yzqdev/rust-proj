@@ -1,4 +1,3 @@
-
 pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
     let mut results = Vec::new();
 
@@ -12,7 +11,7 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 }
 
 #[test]
-fn first(){
-let res=search("q","question");
-println!("{:?}",res);
+fn first() {
+    let res = search("q", "question");
+    println!("{:?}", res);
 }

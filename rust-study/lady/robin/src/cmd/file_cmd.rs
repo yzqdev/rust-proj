@@ -1,62 +1,43 @@
 use std::fs;
-use std::io::Read;
 use std::path::Path;
 
 use colored::Colorize;
-use digest::Digest;
 
-pub fn calc_md5(file_path: &str) {
+use crate::Error;
+use crate::Result;
+
+/// Compute and pretty-print the MD5 hash of a file.
+pub fn calc_md5(file_path: &str) -> Result<String> {
     use std::time::Instant;
-    let now = Instant::now();
+    let started = Instant::now();
 
     let path = Path::new(file_path);
     if !path.exists() {
-        eprintln!("Error: file '{}' not found", file_path);
-        return;
+        return Err(Error::NotFound(file_path.to_string()));
     }
 
-    let mut file = match fs::File::open(path) {
-        Ok(f) => f,
-        Err(e) => {
-            eprintln!("Error: cannot open '{}': {}", file_path, e);
-            return;
-        }
-    };
+    let hash = hash_utils::file_hash(path, hash_utils::Algorithm::Md5)?;
+    let file_size = fs::metadata(path)
+        .map_err(|source| Error::Io {
+            path: file_path.to_string(),
+            source,
+        })?
+        .len();
+    let elapsed = started.elapsed().as_secs_f64();
 
-    let mut hasher = md5::Md5::new();
-    let mut buffer = [0u8; 8192];
-
-    loop {
-        let n = file.read(&mut buffer).unwrap_or(0);
-        if n == 0 {
-            break;
-        }
-        hasher.update(&buffer[..n]);
-    }
-
-    let result = hasher.finalize();
-
-    let file_size = fs::metadata(path).map(|m| m.len()).unwrap_or(0);
-    println!("File:     {}", file_path.cyan());
-    println!("Size:     {} bytes", file_size.to_string().yellow());
-    println!("MD5:      {:x}", result);
-    println!("Elapsed:  {}s", now.elapsed().as_secs_f64());
+    let lines = [
+        format!("File:     {file_path}").cyan().to_string(),
+        format!("Size:     {}", file_size.to_string().yellow()),
+        format!("MD5:      {hash}"),
+        format!("Elapsed:  {elapsed}s"),
+    ];
+    Ok(lines.join("\n"))
 }
 
-pub fn image_info(file_path: &str) {
+/// Show basic image file information (type, size, permissions).
+pub fn image_info(file_path: &str) -> Result<String> {
     let path = Path::new(file_path);
-    if !path.exists() {
-        eprintln!("Error: file '{}' not found", file_path);
-        return;
-    }
-
-    let metadata = match fs::metadata(path) {
-        Ok(m) => m,
-        Err(e) => {
-            eprintln!("Error: {}", e);
-            return;
-        }
-    };
+    let metadata = metadata_of(path, file_path)?;
 
     let ext = path
         .extension()
@@ -64,33 +45,28 @@ pub fn image_info(file_path: &str) {
         .unwrap_or("unknown")
         .to_lowercase();
 
-    let is_image = ["png", "jpg", "jpeg", "gif", "bmp", "webp", "svg", "ico"]
-        .contains(&ext.as_str());
+    let is_image =
+        ["png", "jpg", "jpeg", "gif", "bmp", "webp", "svg", "ico"].contains(&ext.as_str());
 
+    let mut lines = Vec::new();
     if !is_image {
-        eprintln!("Warning: '{}' may not be an image file", file_path);
+        lines.push(format!("Warning: '{file_path}' may not be an image file"));
     }
-
-    println!("{}", format!("=== Image Info: {} ===", file_path).green());
-    println!("Type:     {}", ext.to_uppercase());
-    println!("Size:     {} bytes", metadata.len());
-    println!("Read-only: {}", metadata.permissions().readonly());
+    lines.push(
+        format!("=== Image Info: {file_path} ===")
+            .green()
+            .to_string(),
+    );
+    lines.push(format!("Type:     {}", ext.to_uppercase()));
+    lines.push(format!("Size:     {} bytes", metadata.len()));
+    lines.push(format!("Read-only: {}", metadata.permissions().readonly()));
+    Ok(lines.join("\n"))
 }
 
-pub fn file_info(file_path: &str) {
+/// Show detailed file information.
+pub fn file_info(file_path: &str) -> Result<String> {
     let path = Path::new(file_path);
-    if !path.exists() {
-        eprintln!("Error: file '{}' not found", file_path);
-        return;
-    }
-
-    let metadata = match fs::metadata(path) {
-        Ok(m) => m,
-        Err(e) => {
-            eprintln!("Error: {}", e);
-            return;
-        }
-    };
+    let metadata = metadata_of(path, file_path)?;
 
     let file_type = if metadata.is_dir() {
         "directory"
@@ -100,33 +76,48 @@ pub fn file_info(file_path: &str) {
         "other"
     };
 
-    println!("{}", format!("=== File Info: {} ===", file_path).green());
-    println!("Type:     {}", file_type);
-    println!("Size:     {} bytes", metadata.len());
-    println!(
-        "Read-only: {}",
-        if metadata.permissions().readonly() {
-            "yes".red()
-        } else {
-            "no".green()
-        }
-    );
+    let readonly = if metadata.permissions().readonly() {
+        "yes".red().to_string()
+    } else {
+        "no".green().to_string()
+    };
+    let lines = [
+        format!("=== File Info: {file_path} ===")
+            .green()
+            .to_string(),
+        format!("Type:     {file_type}"),
+        format!("Size:     {} bytes", metadata.len()),
+        format!("Read-only: {readonly}"),
+    ];
+    Ok(lines.join("\n"))
 }
 
-pub fn dir_tree(dir_path: &str) {
+/// Display a directory tree up to depth 3, skipping hidden entries.
+pub fn dir_tree(dir_path: &str) -> Result<String> {
     let path = Path::new(dir_path);
     if !path.exists() || !path.is_dir() {
-        eprintln!("Error: '{}' is not a valid directory", dir_path);
-        return;
+        return Err(Error::NotADirectory(dir_path.to_string()));
     }
 
-    println!("{}", format!("Directory tree: {}", dir_path).green());
-    print_tree(path, 0, "");
+    let mut out = String::new();
+    out.push_str(&format!("Directory tree: {dir_path}\n").green().to_string());
+    print_tree(path, 0, "", &mut out);
+    Ok(out.trim_end().to_string())
 }
 
-fn print_tree(dir: &Path, depth: usize, prefix: &str) {
+fn metadata_of(path: &Path, display: &str) -> Result<fs::Metadata> {
+    if !path.exists() {
+        return Err(Error::NotFound(display.to_string()));
+    }
+    fs::metadata(path).map_err(|source| Error::Io {
+        path: display.to_string(),
+        source,
+    })
+}
+
+fn print_tree(dir: &Path, depth: usize, prefix: &str, out: &mut String) {
     if depth > 3 {
-        println!("{}   ... (max depth reached)", prefix);
+        out.push_str(&format!("{prefix}   ... (max depth reached)\n"));
         return;
     }
 
@@ -152,32 +143,64 @@ fn print_tree(dir: &Path, depth: usize, prefix: &str) {
         let is_last = i == count - 1;
         let connector = if is_last { "└── " } else { "├── " };
         let new_prefix = if is_last {
-            format!("{}    ", prefix)
+            format!("{prefix}    ")
         } else {
-            format!("{}│   ", prefix)
+            format!("{prefix}│   ")
         };
 
         let name = entry.file_name();
         let name_str = name.to_string_lossy().to_string();
 
         if entry.file_type().map(|t| t.is_dir()).unwrap_or(false) {
-            println!("{}{}{}/", prefix, connector, name_str.cyan());
-            print_tree(&entry.path(), depth + 1, &new_prefix);
+            out.push_str(&format!("{prefix}{connector}{}/\n", name_str.cyan()));
+            print_tree(&entry.path(), depth + 1, &new_prefix, out);
         } else {
             let size = entry.metadata().ok().map(|m| m.len()).unwrap_or(0);
-            println!("{}{}{} ({})", prefix, connector, name_str, format_bytes(size));
+            out.push_str(&format!(
+                "{prefix}{connector}{} ({})\n",
+                name_str,
+                format_bytes(size)
+            ));
         }
     }
 }
 
-fn format_bytes(size: u64) -> String {
+/// Format a byte count with human-readable units.
+pub fn format_bytes(size: u64) -> String {
     const UNITS: &[&str] = &["B", "KB", "MB", "GB"];
     let mut s = size as f64;
     for unit in UNITS {
         if s < 1024.0 {
-            return format!("{:.1} {}", s, unit);
+            return format!("{s:.1} {unit}");
         }
         s /= 1024.0;
     }
-    format!("{:.2} TB", s)
+    format!("{s:.2} TB")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn byte_formatting() {
+        assert_eq!(format_bytes(0), "0.0 B");
+        assert_eq!(format_bytes(512), "512.0 B");
+        assert_eq!(format_bytes(2048), "2.0 KB");
+        assert_eq!(format_bytes(5 * 1024 * 1024), "5.0 MB");
+        assert_eq!(format_bytes(3u64 * 1024 * 1024 * 1024), "3.0 GB");
+        assert!(format_bytes(5u64 * 1024 * 1024 * 1024 * 1024).ends_with("TB"));
+    }
+
+    #[test]
+    fn missing_file_is_reported() {
+        let err = calc_md5("no-such-file.bin").unwrap_err();
+        assert!(err.to_string().contains("no-such-file.bin"));
+    }
+
+    #[test]
+    fn tree_requires_directory() {
+        let err = dir_tree("no-such-dir/").unwrap_err();
+        assert!(err.to_string().contains("not a valid directory"));
+    }
 }

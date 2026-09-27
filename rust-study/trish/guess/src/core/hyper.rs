@@ -1,3 +1,6 @@
+// 教学示例：保留原始写法。
+#![allow(clippy::all)]
+
 struct SeaCreature {
     noise: String,
 }

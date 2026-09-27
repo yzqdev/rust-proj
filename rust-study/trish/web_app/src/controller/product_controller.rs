@@ -1,12 +1,7 @@
-use axum::{
-    http::StatusCode,
-    response::IntoResponse,
-    routing::{get, post},
-    Json, Router,
-};
+use axum::{Json, Router, http::StatusCode, routing::get};
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 static NEXT_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -57,7 +52,10 @@ lazy_static::lazy_static! {
 pub fn product_route() -> Router {
     Router::new()
         .route("/api/products", get(list_products).post(create_product))
-        .route("/api/products/{id}", get(get_product).put(update_product).delete(delete_product))
+        .route(
+            "/api/products/{id}",
+            get(get_product).put(update_product).delete(delete_product),
+        )
         .route("/api/products/search", get(search_products))
 }
 
@@ -66,9 +64,7 @@ async fn list_products() -> Json<Vec<Product>> {
     Json(products.clone())
 }
 
-async fn create_product(
-    Json(payload): Json<CreateProduct>,
-) -> (StatusCode, Json<Product>) {
+async fn create_product(Json(payload): Json<CreateProduct>) -> (StatusCode, Json<Product>) {
     let id = NEXT_ID.fetch_add(1, Ordering::SeqCst);
     let product = Product {
         id,
@@ -98,8 +94,11 @@ async fn update_product(
     Json(payload): Json<UpdateProduct>,
 ) -> Result<Json<Product>, StatusCode> {
     let mut products = PRODUCTS.lock().unwrap();
-    let product = products.iter_mut().find(|p| p.id == id).ok_or(StatusCode::NOT_FOUND)?;
-    
+    let product = products
+        .iter_mut()
+        .find(|p| p.id == id)
+        .ok_or(StatusCode::NOT_FOUND)?;
+
     if let Some(name) = payload.name {
         product.name = name;
     }
@@ -112,13 +111,11 @@ async fn update_product(
     if let Some(in_stock) = payload.in_stock {
         product.in_stock = in_stock;
     }
-    
+
     Ok(Json(product.clone()))
 }
 
-async fn delete_product(
-    axum::extract::Path(id): axum::extract::Path<u64>,
-) -> StatusCode {
+async fn delete_product(axum::extract::Path(id): axum::extract::Path<u64>) -> StatusCode {
     let mut products = PRODUCTS.lock().unwrap();
     let len = products.len();
     products.retain(|p| p.id != id);

@@ -1,6 +1,6 @@
 pub mod io_use;
-pub mod trait_use;
 pub mod macro_use;
+pub mod trait_use;
 
 /// String utilities module
 pub mod string_util {
@@ -20,7 +20,10 @@ pub mod string_util {
 
     /// Check if a string starts with a digit
     pub fn starts_with_digit(s: &str) -> bool {
-        s.chars().next().map(|c| c.is_ascii_digit()).unwrap_or(false)
+        s.chars()
+            .next()
+            .map(|c| c.is_ascii_digit())
+            .unwrap_or(false)
     }
 }
 

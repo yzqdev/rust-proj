@@ -1,0 +1,66 @@
+name: Check Frontend
+
+on:
+  pull_request:
+
+jobs:
+  frontend-check:
+    runs-on: ubuntu-24.04
+
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Check frontend changes
+        id: changes
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'src/**'
+              - 'index.html'
+              - 'vite.config.*'
+              - 'eslint.config.*'
+              - '.prettierrc*'
+              - '.prettierignore'
+              - 'tsconfig*.json'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - '.github/workflows/check-frontend.yml'
+
+      - name: Skip frontend checks when unchanged
+        if: steps.changes.outputs.frontend != 'true'
+        run: echo "No frontend changes detected, skipping frontend checks."
+
+      - name: Checkout code
+        if: steps.changes.outputs.frontend == 'true'
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: steps.changes.outputs.frontend == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: Setup pnpm
+        if: steps.changes.outputs.frontend == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install dependencies
+        if: steps.changes.outputs.frontend == 'true'
+        run: pnpm install
+
+      - name: Run Prettier check
+        if: steps.changes.outputs.frontend == 'true'
+        run: pnpm exec prettier . --check
+
+      - name: Run ESLint check
+        if: steps.changes.outputs.frontend == 'true'
+        run: pnpm exec eslint -c eslint.config.js --max-warnings=0 src
+
+      - name: Run Vue TSC check
+        if: steps.changes.outputs.frontend == 'true'
+        run: pnpm exec vue-tsc --noEmit

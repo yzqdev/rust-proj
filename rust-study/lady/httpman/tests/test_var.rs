@@ -1,3 +1,12 @@
+// 教学示例：演示变量、字符串、枚举与方法的用法。
+#![allow(
+    dead_code,
+    unused_variables,
+    unused_assignments,
+    unreachable_patterns,
+    clippy::redundant_field_names
+)]
+
 use colored::Colorize;
 #[test]
 
@@ -111,6 +120,6 @@ fn test_method() {
     println!("{}", sweet.price);
     println!("{:?}", sweet);
     sweet.buy();
-    let fruit=Drink::new(0.6);
-fruit.buy();
+    let fruit = Drink::new(0.6);
+    fruit.buy();
 }

@@ -30,8 +30,10 @@ fn random_animal(random_number: f64) -> Box<dyn Animal> {
 }
 
 pub fn box_main_fn() {
-    let random_number =rand::random() ;
+    let random_number = rand::random();
     let animal = random_animal(random_number);
-    println!("You've randomly chosen an animal, and it says {}", animal.noise());
+    println!(
+        "You've randomly chosen an animal, and it says {}",
+        animal.noise()
+    );
 }
-

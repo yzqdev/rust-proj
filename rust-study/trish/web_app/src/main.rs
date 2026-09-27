@@ -1,41 +1,34 @@
-//! Run with
-//!
-//! ```not_rust
-//! cd examples && cargo run -p example-routes-and-handlers-close-together
-//! ```
+use std::process::ExitCode;
 
-mod controller;
-
-pub use crate::controller::print_hello;
-
-use crate::controller::index_controller::{
-    get_foo, post_foo, root, user_route,
-};
-use crate::controller::product_controller::product_route;
-use crate::controller::health_controller::health_route;
-use axum::Router;
-use std::net::SocketAddr;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use web_app::build_router;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> ExitCode {
     tracing_subscriber::registry()
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "example_versioning=debug".into()),
+                .unwrap_or_else(|_| "web_app=debug".into()),
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
 
-    let app = Router::new()
-        .merge(root())
-        .merge(get_foo())
-        .merge(post_foo())
-        .merge(user_route())
-        .merge(product_route())
-        .merge(health_route());
+    let app = build_router();
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    tracing::debug!("listening on {}", listener.local_addr().unwrap());
-    axum::serve(listener, app).await.unwrap();
+    match tokio::net::TcpListener::bind("0.0.0.0:3000").await {
+        Ok(listener) => {
+            tracing::debug!("listening on {}", listener.local_addr().unwrap());
+            match axum::serve(listener, app).await {
+                Ok(()) => ExitCode::SUCCESS,
+                Err(err) => {
+                    eprintln!("Error serving: {err}");
+                    ExitCode::FAILURE
+                }
+            }
+        }
+        Err(err) => {
+            eprintln!("Error: cannot bind to 0.0.0.0:3000: {err}");
+            ExitCode::FAILURE
+        }
+    }
 }

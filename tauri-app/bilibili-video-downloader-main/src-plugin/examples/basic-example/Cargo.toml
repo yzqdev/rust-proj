@@ -1,0 +1,13 @@
+[package]
+name = "basic-example"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+bilibili-video-downloader-plugin-sdk = { path = "../../plugin-sdk" }
+
+tokio = { version = "1.49.0", features = ["full"] }
+reqwest = { version = "0.13.2", default-features = false, features = ["native-tls", "system-proxy"] }

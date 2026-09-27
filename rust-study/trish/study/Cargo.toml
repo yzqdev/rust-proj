@@ -1,15 +1,20 @@
 [package]
 name = "study"
-version = "0.1.0"
-edition = "2024"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Study tool CLI (file operations, string utils)"
 
 [dependencies]
-rand = "0.8.5"
-clap = { version = "^4.5.4", features = ["derive", "cargo"] }
-md-5 = "0.10.6"
- 
-reqwest = { version = "0", features = ["json"] }
-tokio = { version = "1", features = ["full"] }
-dirs="6.0.0"
+clap.workspace = true
+clap_complete.workspace = true
+md-5.workspace = true
+rand.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true
+
+[lints]
+workspace = true
+

@@ -1,14 +1,15 @@
 use std::ffi::OsString;
-use std::fs;
-use std::io::Write;
 use std::path::PathBuf;
+use std::process::ExitCode;
 
-use clap::{arg, Command};
+use clap::{Command, arg};
+use clap_complete::shells::Shell;
+use sampo::{Error, Result};
 
 fn cli() -> Command {
     Command::new("sampo")
         .about("A fictional versioning CLI (builder-style)")
-        .version("1.0")
+        .version(clap::crate_version!())
         .author("yzqdev")
         .subcommand_required(true)
         .arg_required_else_help(true)
@@ -71,132 +72,125 @@ fn cli() -> Command {
                 .about("Show commit history")
                 .arg(arg!(-n --"max-count" <NUM> "Max entries").default_value("10")),
         )
+        .subcommand(
+            Command::new("completions")
+                .about("Generate shell completions")
+                .arg(
+                    arg!(--shell <SHELL> "Shell to generate completions for")
+                        .value_parser(clap::value_parser!(Shell))
+                        .required(true),
+                ),
+        )
 }
 
 fn push_args() -> Vec<clap::Arg> {
     vec![arg!(-m --message <MESSAGE> "Stash message")]
 }
 
-fn main() {
-    let matches = cli().get_matches();
+fn required<'a>(matches: &'a clap::ArgMatches, id: &'static str) -> Result<&'a str> {
+    matches
+        .get_one::<String>(id)
+        .map(String::as_str)
+        .ok_or_else(|| Error::MissingArgument(id.to_string()))
+}
 
+fn dispatch(matches: clap::ArgMatches) -> Result<String> {
     match matches.subcommand() {
-        Some(("init", sub_matches)) => {
-            let name = sub_matches.get_one::<String>("NAME").expect("required");
-            let dir = format!(".{}", name);
-            match fs::create_dir_all(&dir) {
-                Ok(_) => {
-                    let mut readme = fs::File::create(format!("{}/README.md", dir)).unwrap();
-                    writeln!(readme, "# {}", name).unwrap();
-                    println!("Initialized empty repository: {}", dir);
-                }
-                Err(e) => eprintln!("Error creating repository: {}", e),
-            }
-        }
-        Some(("clone", sub_matches)) => {
-            let remote = sub_matches.get_one::<String>("REMOTE").expect("required");
-            let dir_name = remote
-                .split('/')
-                .last()
-                .unwrap_or(remote)
-                .trim_end_matches(".git");
-            match fs::create_dir_all(dir_name) {
-                Ok(_) => println!("Cloned '{}' into '{}'", remote, dir_name),
-                Err(e) => eprintln!("Error cloning: {}", e),
-            }
-        }
-        Some(("diff", sub_matches)) => {
-            let color = sub_matches
+        Some(("init", sub)) => sampo::init_repo(required(sub, "NAME")?),
+        Some(("clone", sub)) => sampo::clone_repo(required(sub, "REMOTE")?),
+        Some(("diff", sub)) => {
+            let color = sub
                 .get_one::<String>("color")
-                .map(|s| s.as_str())
-                .expect("defaulted in clap");
-
-            let mut base = sub_matches.get_one::<String>("base").map(|s| s.as_str());
-            let mut head = sub_matches.get_one::<String>("head").map(|s| s.as_str());
-            let mut path = sub_matches.get_one::<String>("path").map(|s| s.as_str());
+                .map(String::as_str)
+                .unwrap_or("auto");
+            let mut base = sub.get_one::<String>("base").map(String::as_str);
+            let mut head = sub.get_one::<String>("head").map(String::as_str);
+            let mut path = sub.get_one::<String>("path").map(String::as_str);
             if path.is_none() {
-                path = head;
-                head = None;
+                path = head.take();
                 if path.is_none() {
-                    path = base;
-                    base = None;
+                    path = base.take();
                 }
             }
-            let base = base.unwrap_or("stage");
-            let head = head.unwrap_or("worktree");
-            let path = path.unwrap_or("");
-            println!("Diffing {}..{} {} (color={})", base, head, path, color);
+            Ok(sampo::diff(
+                base.unwrap_or("stage"),
+                head.unwrap_or("worktree"),
+                path.unwrap_or(""),
+                color,
+            ))
         }
-        Some(("push", sub_matches)) => {
-            let remote = sub_matches.get_one::<String>("REMOTE").expect("required");
-            println!("Pushing to '{}' (simulated)", remote);
-        }
-        Some(("add", sub_matches)) => {
-            let paths = sub_matches
+        Some(("push", sub)) => Ok(sampo::push(required(sub, "REMOTE")?)),
+        Some(("add", sub)) => {
+            let paths: Vec<PathBuf> = sub
                 .get_many::<PathBuf>("PATH")
                 .into_iter()
                 .flatten()
-                .collect::<Vec<_>>();
-            for p in &paths {
-                if p.exists() {
-                    println!("Staged: {}", p.display());
-                } else {
-                    eprintln!("Path not found: {}", p.display());
-                }
-            }
+                .cloned()
+                .collect();
+            sampo::add_paths(&paths)
         }
-        Some(("commit", sub_matches)) => {
-            let msg = sub_matches.get_one::<String>("message").expect("required");
-            println!("Committed with message: \"{}\"", msg);
-        }
-        Some(("status", _)) => {
-            println!("On branch main");
-            println!("Nothing to commit, working tree clean");
-        }
-        Some(("stash", sub_matches)) => {
-            let stash_command = sub_matches.subcommand().unwrap_or(("push", sub_matches));
+        Some(("commit", sub)) => Ok(sampo::commit(required(sub, "message")?)),
+        Some(("status", _)) => Ok(sampo::status()),
+        Some(("stash", sub)) => {
+            let stash_command = sub.subcommand().unwrap_or(("push", sub));
             match stash_command {
-                ("apply", sub_matches) => {
-                    let stash = sub_matches.get_one::<String>("STASH");
-                    println!("Applying {:?}", stash);
+                ("apply", s) => {
+                    let stash = s.get_one::<String>("STASH").map(String::as_str);
+                    Ok(match stash {
+                        Some(s) => format!("Applied stash: {s}"),
+                        None => "Applied latest stash".into(),
+                    })
                 }
-                ("pop", sub_matches) => {
-                    let stash = sub_matches.get_one::<String>("STASH");
-                    println!("Popping {:?}", stash);
+                ("pop", s) => {
+                    let stash = s.get_one::<String>("STASH").map(String::as_str);
+                    Ok(match stash {
+                        Some(s) => format!("Popped stash: {s}"),
+                        None => "Popped latest stash".into(),
+                    })
                 }
-                ("push", sub_matches) => {
-                    let message = sub_matches.get_one::<String>("message");
-                    if let Some(msg) = message {
-                        println!("Stashed with message: \"{}\"", msg);
-                    } else {
-                        println!("Stashed working directory changes");
-                    }
-                }
-                ("list", _) => {
-                    println!("No stashes found");
-                }
-                (name, _) => {
-                    unreachable!("Unsupported subcommand `{}`", name)
-                }
+                ("push", s) => Ok(match s.get_one::<String>("message").map(String::as_str) {
+                    Some(msg) => format!("Stashed with message: \"{msg}\""),
+                    None => "Stashed working directory changes".into(),
+                }),
+                ("list", _) => Ok("No stashes found".into()),
+                (name, _) => Err(Error::MissingArgument(name.to_string())),
             }
         }
-        Some(("log", sub_matches)) => {
-            let max_count = sub_matches
-                .get_one::<String>("max-count")
-                .map(|s| s.as_str())
-                .unwrap_or("10");
-            println!("Showing last {} commits (simulated)", max_count);
-            println!("commit a1b2c3d4e5f6... (HEAD -> main)");
-            println!("    Initial commit");
+        Some(("log", sub)) => Ok(sampo::log(required(sub, "max-count")?)),
+        Some(("completions", sub)) => {
+            let shell = sub
+                .get_one::<Shell>("shell")
+                .ok_or_else(|| Error::MissingArgument("shell".to_string()))?;
+            let mut cmd = cli();
+            let name = cmd.get_name().to_string();
+            let mut out = Vec::new();
+            clap_complete::generate(*shell, &mut cmd, name, &mut out);
+            Ok(String::from_utf8_lossy(&out).into_owned())
         }
-        Some((ext, sub_matches)) => {
-            let args = sub_matches
+        Some((ext, sub)) => {
+            let args: Vec<OsString> = sub
                 .get_many::<OsString>("")
                 .into_iter()
                 .flatten()
-                .collect::<Vec<_>>();
-            println!("Calling out to {:?} with {:?}", ext, args);
+                .cloned()
+                .collect();
+            Ok(sampo::external(ext, &args))
         }
-        _ => unreachable!(),
+        // `subcommand_required(true)` makes this unreachable.
+        None => Err(Error::MissingArgument("subcommand".to_string())),
+    }
+}
+
+fn main() -> ExitCode {
+    let matches = cli().get_matches();
+    match dispatch(matches) {
+        Ok(output) => {
+            println!("{output}");
+            ExitCode::SUCCESS
+        }
+        Err(err) => {
+            eprintln!("Error: {err}");
+            ExitCode::FAILURE
+        }
     }
 }

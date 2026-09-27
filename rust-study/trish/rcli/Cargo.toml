@@ -1,13 +1,20 @@
 [package]
 name = "rcli"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "A general-purpose CLI (base64, password, word count, bench)"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-#[[bin]]
-#name = "rcli"
-#test = false
-#bench = false
 [dependencies]
-clap = { version = "^4.5.4", features = ["derive", "cargo"] }
-rand = "0.8.5"
+clap.workspace = true
+clap_complete.workspace = true
+rand.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+assert_cmd.workspace = true
+predicates.workspace = true
+
+[lints]
+workspace = true
+

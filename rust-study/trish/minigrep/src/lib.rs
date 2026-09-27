@@ -1,17 +1,19 @@
+// 上游教学代码。
+#![allow(clippy::bool_assert_comparison)]
+
 pub mod config;
-pub mod options;
 pub mod error;
+pub mod options;
 
 extern crate regex;
 
-
+use crate::config::{Config, GenError, GenResult};
+use crate::error::MinigrepError;
 use regex::RegexBuilder;
 use std::fmt::Write;
 use std::fs::File;
-use std::io::prelude::*;
 use std::io::SeekFrom;
-use crate::config::{Config, GenError, GenResult};
-use crate::error::MinigrepError;
+use std::io::prelude::*;
 
 /// Executes the search.
 ///
@@ -26,21 +28,18 @@ pub fn search(config: &mut Config) -> Vec<usize> {
     let mut query_copy = config.get_query().to_string();
     let mut regex_builder = RegexBuilder::new(&query_copy);
 
-    match config.get_options() {
-        Some(options) => {
-            // In case of word boundary check, recreate the regex builder with
-            // a word boundary regex.
-            if options.is_exact_match() {
-                query_copy.clear();
-                write!(query_copy, r"\b{}\b", config.get_query()).unwrap();
-                regex_builder = RegexBuilder::new(&query_copy);
-            }
-
-            if options.is_case_sensitive() {
-                regex_builder.case_insensitive(true);
-            }
+    if let Some(options) = config.get_options() {
+        // In case of word boundary check, recreate the regex builder with
+        // a word boundary regex.
+        if options.is_exact_match() {
+            query_copy.clear();
+            write!(query_copy, r"\b{}\b", config.get_query()).unwrap();
+            regex_builder = RegexBuilder::new(&query_copy);
         }
-        None => {}
+
+        if options.is_case_sensitive() {
+            regex_builder.case_insensitive(true);
+        }
     }
 
     for mat in regex_builder.build().unwrap().find_iter(&file_content) {
@@ -71,14 +70,10 @@ pub fn parse_config(args: &[String]) -> GenResult<Config> {
 
     let file = file.unwrap();
     if !args[1].starts_with("-") {
-        return Ok(Config::new(None, &args[1], &file)?);
+        return Config::new(None, &args[1], &file);
     }
 
-    Ok(Config::new(
-        Some(&args[1].trim_start_matches('-')),
-        &args[2],
-        &file,
-    )?)
+    Config::new(Some(args[1].trim_start_matches('-')), &args[2], &file)
 }
 
 #[cfg(test)]

@@ -1,71 +1,14 @@
-mod datatype;
-mod syntax;
-use crate::datatype::{array_data::get_array, struct_data::Site};
-use clap::{arg, Arg, ArgAction, Command};
-use syntax::generics::show_generic;
+use std::process::ExitCode;
 
-#[derive(Debug)]
-struct Rectangle {
-    width: u32,
-    height: u32,
-}
+use basic::{string_demo, struct_demo};
+use clap::{Arg, ArgAction, Command, arg};
+use clap_complete::Shell;
 
-impl Rectangle {
-    fn area(&self) -> u32 {
-        self.width * self.height
-    }
-
-    fn can_hold(&self, other: &Rectangle) -> bool {
-        self.width > other.width && self.height > other.height
-    }
-}
-
-fn main_struct() {
-    let runoob = Site {
-        domain: String::from("www.runoob.com"),
-        name: String::from("RUNOOB"),
-        nation: String::from("China"),
-        found: 2013,
-    };
-    let rect1 = Rectangle {
-        width: 30,
-        height: 50,
-    };
-    let rect2 = Rectangle {
-        width: 10,
-        height: 20,
-    };
-
-    println!("rect1 is {:?}, area: {}", rect1, rect1.area());
-    println!("rect1 can hold rect2: {}", rect1.can_hold(&rect2));
-    println!("struct data {:?}", runoob);
-    println!("Hello, world!");
-    get_array();
-}
-
-/// Parse a string to a number, returning None on failure
-fn parse_number(s: &str) -> Option<i32> {
-    s.parse::<i32>().ok()
-}
-
-/// Sum an array using iterator
-fn sum_array(arr: &[i32]) -> i32 {
-    arr.iter().sum()
-}
-
-/// String utility: capitalize first letter
-fn capitalize(s: &str) -> String {
-    let mut chars = s.chars();
-    match chars.next() {
-        None => String::new(),
-        Some(c) => c.to_uppercase().to_string() + chars.as_str(),
-    }
-}
-
-fn main() {
-    let matches = Command::new("basic")
-        .about("package manager utility")
-        .version("5.2.1")
+fn cli() -> Command {
+    Command::new("basic")
+        .version(clap::crate_version!())
+        .author("yzqdev")
+        .about("package manager utility (clap builder API demo)")
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(
@@ -135,24 +78,31 @@ fn main() {
                         .default_value("all"),
                 ),
         )
-        .get_matches();
+        .subcommand(
+            Command::new("completions")
+                .about("Generate shell completions")
+                .arg(
+                    arg!(--shell <SHELL> "Shell to generate completions for")
+                        .value_parser(clap::value_parser!(Shell))
+                        .required(true),
+                ),
+        )
+}
+
+fn main() -> ExitCode {
+    let matches = cli().get_matches();
 
     match matches.subcommand() {
         Some(("sync", sync_matches)) => {
-            if sync_matches.contains_id("search") {
-                let packages: Vec<_> = sync_matches
-                    .get_many::<String>("search")
-                    .expect("contains_id")
-                    .map(|s| s.as_str())
-                    .collect();
-                let values = packages.join(", ");
+            if let Some(packages) = sync_matches.get_many::<String>("search") {
+                let values = packages.cloned().collect::<Vec<_>>().join(", ");
                 println!("Searching for {values}...");
-                return;
+                return ExitCode::SUCCESS;
             }
 
             let packages: Vec<_> = sync_matches
                 .get_many::<String>("package")
-                .expect("is present")
+                .unwrap_or_default()
                 .map(|s| s.as_str())
                 .collect();
             let values = packages.join(", ");
@@ -175,7 +125,7 @@ fn main() {
             }
         }
         Some(("generic", _)) => {
-            show_generic();
+            basic::syntax::generics::show_generic();
         }
         Some(("demo", demo_matches)) => {
             let feature = demo_matches
@@ -183,23 +133,27 @@ fn main() {
                 .map(|s| s.as_str())
                 .unwrap_or("all");
             match feature {
-                "struct" => main_struct(),
-                "array" => get_array(),
-                "string" => {
-                    let text = "hello world";
-                    println!("Original: {}", text);
-                    println!("Capitalized: {}", capitalize(text));
-                    println!("Parse '42': {:?}", parse_number("42"));
-                    println!("Sum of [1,2,3,4,5]: {}", sum_array(&[1, 2, 3, 4, 5]));
-                }
+                "struct" => struct_demo(),
+                "array" => basic::datatype::array_data::get_array(),
+                "string" => string_demo(),
                 _ => {
-                    main_struct();
-                    get_array();
-                    println!("Sum of [10,20,30]: {}", sum_array(&[10, 20, 30]));
-                    println!("Capitalized 'rust': {}", capitalize("rust"));
+                    struct_demo();
+                    string_demo();
+                    println!("Sum of [10,20,30]: {}", basic::sum_array(&[10, 20, 30]));
+                    println!("Capitalized 'rust': {}", basic::capitalize("rust"));
                 }
             }
         }
-        _ => unreachable!(),
+        Some(("completions", m)) => {
+            let shell = m.get_one::<Shell>("shell").expect("required by clap");
+            let mut cmd = cli();
+            let name = cmd.get_name().to_string();
+            let mut out = Vec::new();
+            clap_complete::generate(*shell, &mut cmd, name, &mut out);
+            print!("{}", String::from_utf8_lossy(&out));
+        }
+        // `subcommand_required(true)` makes this unreachable.
+        _ => return ExitCode::FAILURE,
     }
+    ExitCode::SUCCESS
 }

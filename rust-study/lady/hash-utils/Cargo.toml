@@ -1,0 +1,15 @@
+[package]
+name = "hash-utils"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+description = "Shared streaming hash helpers (MD5, SHA256) for the lady workspace CLIs"
+
+[dependencies]
+md-5.workspace = true
+sha2.workspace = true
+digest.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

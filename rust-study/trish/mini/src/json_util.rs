@@ -1,8 +1,8 @@
 // use crate::files::f
 // json_util
 use bincode::serialize as to_bincode;
+use serde::Serialize;
 use serde_cbor::to_vec as to_cbor;
-use serde_derive::Serialize;
 use serde_json::to_string as to_json;
 //这个注解用来让serde_derive自行编写需要的代码以便实现struct在内存和磁盘中的转换
 #[derive(Serialize)]

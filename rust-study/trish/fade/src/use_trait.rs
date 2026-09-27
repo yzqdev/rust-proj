@@ -8,12 +8,12 @@ trait Animal {
 
 struct Dog {
     name: String,
-    category: &'static str
+    category: &'static str,
 }
 
 struct Cat {
     name: String,
-    category: &'static str
+    category: &'static str,
 }
 
 // 在 Go 里面只需要给 Dog 实现方法即可
@@ -48,10 +48,16 @@ fn drink<T: Animal>(animal: &T) {
 }
 
 pub fn use_trait() {
-    let dog = Dog{name: "旺财".to_string(), category: "小狗"};
-    let cat = Cat{name: "翠花".to_string(), category: "小猫"};
-    eat(&dog);  // 旺财 在吃东西，它是一只 小狗
-    eat(&cat);  // 翠花 在吃东西，它是一只 小猫
-    drink(&dog);  // 旺财 在喝饮料，它是一只 小狗
-    drink(&cat);  // 翠花 在喝饮料，它是一只 小猫
+    let dog = Dog {
+        name: "旺财".to_string(),
+        category: "小狗",
+    };
+    let cat = Cat {
+        name: "翠花".to_string(),
+        category: "小猫",
+    };
+    eat(&dog); // 旺财 在吃东西，它是一只 小狗
+    eat(&cat); // 翠花 在吃东西，它是一只 小猫
+    drink(&dog); // 旺财 在喝饮料，它是一只 小狗
+    drink(&cat); // 翠花 在喝饮料，它是一只 小猫
 }

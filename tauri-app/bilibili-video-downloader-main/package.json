@@ -1,0 +1,46 @@
+{
+  "name": "bilibili-video-downloader",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "format": "prettier . -w && cargo fmt --all --manifest-path src-tauri/Cargo.toml && cargo fmt --all --manifest-path src-plugin/Cargo.toml && cargo fmt --all --manifest-path src-plugin/examples/Cargo.toml",
+    "check": "prettier . --check && eslint -c eslint.config.js --max-warnings=0 src && vue-tsc --noEmit && cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings && cargo clippy --manifest-path src-plugin/Cargo.toml --workspace -- -D warnings && cargo clippy --manifest-path src-plugin/examples/Cargo.toml --workspace -- -D warnings"
+  },
+  "dependencies": {
+    "@phosphor-icons/vue": "^2.2.1",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2.3.0",
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-os": "^2.3.0",
+    "@viselect/vue": "^3.9.0",
+    "lazysizes": "^5.3.2",
+    "naive-ui": "^2.42.0",
+    "pinia": "^3.0.3",
+    "virtua": "^0.48.6",
+    "vue": "^3.5.13",
+    "vue-draggable-plus": "^0.6.0",
+    "z-vue-scan": "^0.0.35"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.30.1",
+    "@tauri-apps/cli": "^2",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vitejs/plugin-vue-jsx": "^5.0.1",
+    "eslint": "^9.30.1",
+    "eslint-plugin-vue": "^10.3.0",
+    "globals": "^16.3.0",
+    "prettier": "3.6.2",
+    "typescript": "~5.6.2",
+    "typescript-eslint": "^8.36.0",
+    "unocss": "^66.3.3",
+    "vite": "^6.0.3",
+    "vite-plugin-vue-devtools": "^7.7.7",
+    "vue-tsc": "^2.1.10"
+  },
+  "packageManager": "pnpm@9.5.0"
+}

@@ -1,3 +1,6 @@
+// 教学示例：保留原始写法。
+#![allow(clippy::all)]
+
 use std::io;
 
 use std::fs::File;

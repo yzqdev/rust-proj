@@ -1,51 +1,52 @@
+// 教学示例测试：演示 std::fs / std::path 的用法。
+#![allow(unused_variables)]
+
 use std::io::{self, Read};
-use std::{env, fs, fs::File};
 use std::net::IpAddr;
 use std::path::Path;
+use std::{env, fs, fs::File};
 use study::io_use::conf_constant::UNBUILD_CONF;
 use study::io_use::simple_fs::add;
 
 #[test]
 fn it_works() {
-
     let result = add(2, 2);
-    let cwd=env::current_dir();
-    if let Ok(cur)=cwd {
-        println!("{:?}",cur);
+    let cwd = env::current_dir();
+    if let Ok(cur) = cwd {
+        println!("{:?}", cur);
     }
-    println!("{}",result);
+    println!("{}", result);
     fs::write(Path::new("../target/build.config.ts"), UNBUILD_CONF)
         .expect("cant find target foldr");
     assert_eq!(result, 4);
 }
 #[test]
 
-pub fn read_txt()->io::Result<()>{
-    println!("{:?}",env::current_dir().unwrap());
-      let greeting_file_result = File::open("Cargo.toml");
+pub fn read_txt() -> io::Result<()> {
+    println!("{:?}", env::current_dir().unwrap());
+    let greeting_file_result = File::open("Cargo.toml");
 
     let mut greeting_file = match greeting_file_result {
         Ok(file) => file,
         Err(error) => panic!("Problem opening the file: {:?}", error),
     };
-     let mut buffer = String::new();
+    let mut buffer = String::new();
 
-   
     greeting_file.read_to_string(&mut buffer)?;
-    println!("{}",buffer);
+    println!("{}", buffer);
     Ok(())
 }
 
 #[test]
-fn say(){
-    let s="herttt";
+fn say() {
+    let s = "herttt";
     let home: IpAddr = "127.0.0.1"
         .parse()
         .expect("Hardcoded IP address should be valid");
     println!("{home}");
 }
 #[test]
-fn path_use(){
+fn path_use() {
     // 从 `&'static str` 创建一个 `Path`
     let path = Path::new(".");
 
@@ -63,11 +64,11 @@ fn path_use(){
 }
 
 #[test]
-fn get_current_dir() -> std::io::Result<()>{
+fn get_current_dir() -> std::io::Result<()> {
     let path = env::current_dir()?;
-    let exe=env::current_exe();
-    println!("{}",exe.expect("this is exe").display());
-    println!("{}",path.display());
+    let exe = env::current_exe();
+    println!("{}", exe.expect("this is exe").display());
+    println!("{}", path.display());
 
-    Ok({})
+    Ok(())
 }

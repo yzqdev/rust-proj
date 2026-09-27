@@ -1,3 +1,6 @@
+// 教学示例：演示解构、所有权与借用。
+#![allow(dead_code)]
+
 pub fn get_array() {
     let mut a = vec![1, 2, 4];
     a.push(11);
@@ -32,8 +35,8 @@ fn check_destruct() {
 
     println!("原始数组中的偶数有: {:?}", even_numbers);
 
-    let guess = "42".parse::<String>().expect("Not a number!");
-    for i in 1..4 {}
+    let _guess = "42".parse::<String>().expect("Not a number!");
+    for _i in 1..4 {}
 }
 
 fn simple_borrow() {

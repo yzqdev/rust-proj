@@ -1,4 +1,2 @@
 #[test]
-fn fs_read(){
-
-}
+fn fs_read() {}

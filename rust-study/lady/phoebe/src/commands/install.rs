@@ -25,10 +25,7 @@ pub struct Install {
 
 impl Install {
     pub(crate) fn call(&self) {
-        let name = self
-            .name
-            .as_deref()
-            .unwrap_or("(default package)");
+        let name = self.name.as_deref().unwrap_or("(default package)");
 
         let target_dir = if self.global {
             "/usr/local/lib/phoebe"
@@ -47,10 +44,10 @@ impl Install {
         }
 
         // Create the target directory and a placeholder
-        if !Path::new(target_dir).exists() {
-            if let Err(e) = fs::create_dir_all(target_dir) {
-                eprintln!("Warning: cannot create '{}': {}", target_dir, e);
-            }
+        if !Path::new(target_dir).exists()
+            && let Err(e) = fs::create_dir_all(target_dir)
+        {
+            eprintln!("Warning: cannot create '{}': {}", target_dir, e);
         }
 
         // Write a mock package.json
@@ -65,10 +62,6 @@ impl Install {
             println!("Installed '{}' at {}", name, pkg_path);
         } else {
             println!("Installed '{}' (simulated)", name);
-        }
-
-        if let Some(p) = &self.param {
-            println!("parameter is: {}", p);
         }
     }
 }

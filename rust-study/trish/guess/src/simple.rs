@@ -1,3 +1,8 @@
+// 教学示例：保留原始写法。
+#![allow(clippy::all)]
+// 教学示例：演示循环、HashMap、字符串与作用域。
+#![allow(unused_imports, unused_variables, unused_mut, dead_code)]
+
 use crate::util::{
     fs_oprea::get_file_text,
     req::{self, main_req},
@@ -6,7 +11,8 @@ use crate::util::{
 use rand::Rng;
 use std::{collections::HashMap, io};
 
-fn simple_print() {
+/// Teaching example (not wired to the CLI): loops, HashMap, and string basics.
+pub fn simple_print() {
     println!("Guess the number!");
 
     let secret_number = rand::thread_rng().gen_range(1..=100);
@@ -40,6 +46,7 @@ fn say() {
         return _s;
     }
 
+    #[allow(unused_assignments)]
     let mut x: i32 = 44;
     x = 9934;
     let number: i32 = 3;

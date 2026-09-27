@@ -1,0 +1,35 @@
+# Auto-generated files
+src/bindings.ts
+
+# Build outputs
+dist/
+dist-ssr/
+
+# Rust/Tauri backend
+src-tauri/
+src-plugin/
+
+# Dependencies
+node_modules/
+pnpm-lock.yaml
+
+# IDE
+.vscode/
+.idea/
+
+# files without parsers
+.gitignore
+.prettierignore
+LICENSE
+
+# Assets and images
+*.svg
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.ico
+*.webp
+
+# Others
+.github/

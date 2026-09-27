@@ -1,32 +1,43 @@
-use clap::Parser;
+use std::fs::File;
+use std::io::{BufReader, Write};
+use std::process::ExitCode;
 
-mod cli;
+use clap::CommandFactory;
+use clap::Parser;
+use clap_complete::Shell;
+use phoebe::csv_to_json;
+
 mod commands;
 
+/// phoebe - CSV processor & package installer
 #[derive(Debug, Parser)]
-#[command(name = "phoebe", version, author, about = "CSV processor & package installer", long_about = None)]
+#[command(
+    name = "phoebe",
+    version,
+    author,
+    about = "CSV processor & package installer",
+    long_about = None
+)]
 struct Opts {
     #[command(subcommand)]
     cmd: SubCommand,
 }
 
 #[derive(Debug, Parser)]
-pub enum SubCommand {
-    /// Convert CSV files to JSON or other formats
+enum SubCommand {
+    /// Convert CSV files to JSON
     #[command(name = "csv")]
     Csv(CsvOpts),
     /// Package installer simulation
     #[command(name = "install")]
     Install(commands::install::Install),
-}
-
-impl SubCommand {
-    pub fn call(self) {
-        match self {
-            Self::Csv(cmd) => cmd.call(),
-            Self::Install(cmd) => cmd.call(),
-        }
-    }
+    /// Generate shell completions
+    #[command(name = "completions")]
+    Completions {
+        /// Shell to generate completions for
+        #[arg(short, long, value_enum)]
+        shell: Shell,
+    },
 }
 
 #[derive(Debug, Parser)]
@@ -44,7 +55,14 @@ pub struct CsvOpts {
     delimiter: char,
 
     /// Whether the CSV has a header row
-    #[arg(long, default_value_t = true)]
+    #[arg(
+        long,
+        default_value_t = true,
+        default_missing_value = "true",
+        num_args = 0..=1,
+        require_equals = true,
+        action = clap::ArgAction::Set
+    )]
     header: bool,
 
     /// Pretty-print the JSON output
@@ -53,93 +71,54 @@ pub struct CsvOpts {
 }
 
 impl CsvOpts {
-    fn call(&self) {
-        use std::fs::File;
-        use std::io::BufReader;
-
-        let file = match File::open(&self.input) {
-            Ok(f) => f,
-            Err(e) => {
-                eprintln!("Error: cannot open '{}': {}", self.input, e);
-                std::process::exit(1);
-            }
-        };
+    fn call(&self) -> Result<(), String> {
+        let file =
+            File::open(&self.input).map_err(|e| format!("cannot open '{}': {e}", self.input))?;
         let reader = BufReader::new(file);
-        let mut csv_reader = csv::ReaderBuilder::new()
-            .delimiter(self.delimiter as u8)
-            .has_headers(self.header)
-            .from_reader(reader);
 
-        let headers: Vec<String> = if self.header {
-            csv_reader
-                .headers()
-                .unwrap()
-                .iter()
-                .map(|h| h.to_string())
-                .collect()
-        } else {
-            // Generate column names if no header
-            let mut cols = Vec::new();
-            if let Some(Ok(row)) = csv_reader.records().next() {
-                for i in 0..row.len() {
-                    cols.push(format!("column_{}", i));
-                }
-            }
-            // Re-create reader since we already consumed one row
-            drop(csv_reader);
-            let file = File::open(&self.input).unwrap();
-            let reader = BufReader::new(file);
-            csv_reader = csv::ReaderBuilder::new()
-                .delimiter(self.delimiter as u8)
-                .has_headers(false)
-                .from_reader(reader);
-            cols
-        };
+        let conv = csv_to_json(reader, self.delimiter, self.header, self.pretty)
+            .map_err(|e| e.to_string())?;
 
-        let mut records: Vec<serde_json::Value> = Vec::new();
-        for result in csv_reader.records() {
-            match result {
-                Ok(record) => {
-                    let mut obj = serde_json::Map::new();
-                    for (i, field) in record.iter().enumerate() {
-                        let key = headers.get(i).map(|s| s.as_str()).unwrap_or("col");
-                        let key_str = if key == "col" {
-                            format!("col_{}", i)
-                        } else {
-                            key.to_string()
-                        };
-                        obj.insert(key_str, serde_json::Value::String(field.to_string()));
-                    }
-                    records.push(serde_json::Value::Object(obj));
-                }
-                Err(e) => {
-                    eprintln!("Warning: skipping row - {}", e);
-                }
-            }
+        for warning in &conv.warnings {
+            eprintln!("Warning: {warning}");
         }
 
-        let json = if self.pretty {
-            serde_json::to_string_pretty(&records).unwrap()
-        } else {
-            serde_json::to_string(&records).unwrap()
-        };
+        let mut out_file = File::create(&self.output)
+            .map_err(|e| format!("cannot write '{}': {e}", self.output))?;
+        writeln!(out_file, "{}", conv.json)
+            .map_err(|e| format!("cannot write '{}': {e}", self.output))?;
 
-        let mut out_file = File::create(&self.output).unwrap_or_else(|e| {
-            eprintln!("Error: cannot write '{}': {}", self.output, e);
-            std::process::exit(1);
-        });
-        use std::io::Write;
-        writeln!(out_file, "{}", json).unwrap();
         println!(
             "Converted {} records from '{}' -> '{}'",
-            records.len(),
-            self.input,
-            self.output
+            conv.count, self.input, self.output
         );
+        Ok(())
     }
 }
 
-fn main() {
+fn main() -> ExitCode {
     let opts = Opts::parse();
-    opts.cmd.call();
+    let result = match opts.cmd {
+        SubCommand::Csv(csv) => csv.call(),
+        SubCommand::Install(install) => {
+            install.call();
+            Ok(())
+        }
+        SubCommand::Completions { shell } => {
+            let mut cmd = Opts::command();
+            let name = cmd.get_name().to_string();
+            let mut out = Vec::new();
+            clap_complete::generate(shell, &mut cmd, name, &mut out);
+            print!("{}", String::from_utf8_lossy(&out));
+            Ok(())
+        }
+    };
+
+    match result {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(message) => {
+            eprintln!("Error: {message}");
+            ExitCode::FAILURE
+        }
+    }
 }

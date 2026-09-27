@@ -1,0 +1,252 @@
+<script setup lang="tsx">
+import { computed, inject, onMounted, onUpdated, useTemplateRef } from 'vue'
+import {
+  BangumiSearchResult,
+  CheeseSearchResult,
+  EpInBangumi,
+  EpInCheese,
+  EpInNormal,
+  EpInUserVideo,
+  NormalInfo,
+  NormalSearchResult,
+  UserVideoSearchResult,
+} from '../../../bindings.ts'
+import SimpleCheckbox from '../../../components/SimpleCheckbox.vue'
+import { PhDownloadSimple, PhGoogleChromeLogo, PhQueue, PhMagnifyingGlass } from '@phosphor-icons/vue'
+import { NTime, useDialog } from 'naive-ui'
+import PartsDialogContent from './PartsDialogContent.vue'
+import { ensureHttps, extractBvid, isElementInViewport, playTaskToQueueAnimation } from '../../../utils.tsx'
+import { navDownloadButtonRefKey } from '../../../injection_keys.ts'
+import { SearchType } from '../SearchPane.vue'
+import IconButton from '../../../components/IconButton.vue'
+
+onMounted(() => console.log('EpisodeCard mounted'))
+onUpdated(() => console.log('EpisodeCard updated'))
+
+const dialog = useDialog()
+
+export type EpisodeInfo = {
+  episodeType: 'Normal' | 'Bangumi' | 'Cheese'
+  aid: number
+  bvid?: string
+  epId?: number
+  href?: string
+  cover: string
+  title: string
+  upName: string
+  upUid: number
+  pubTime: number
+  favTime?: number
+}
+
+const props = defineProps<{
+  searchResult: NormalSearchResult | BangumiSearchResult | CheeseSearchResult | UserVideoSearchResult
+  episode: NormalInfo | EpInNormal | EpInBangumi | EpInCheese | EpInUserVideo
+  episodeType: 'NormalSingle' | 'NormalSeason' | 'Bangumi' | 'Cheese' | 'UserVideo'
+  downloadEpisode?: (episodeInfo: EpisodeInfo) => Promise<void>
+  checkboxChecked?: (episodeInfo: EpisodeInfo) => boolean
+  handleCheckboxClick?: (episodeInfo: EpisodeInfo) => void
+  handleContextMenu?: (episodeInfo: EpisodeInfo) => void
+  search?: (input: string, searchType: SearchType) => void
+}>()
+
+const navDownloadButtonRef = inject(navDownloadButtonRefKey)
+const rootDivRef = useTemplateRef('rootDivRef')
+const downloadButtonRef = useTemplateRef('downloadButtonRef')
+
+const episodeInfo = computed<EpisodeInfo>(() => {
+  if (props.episodeType === 'NormalSingle') {
+    const episode = props.episode as NormalInfo
+    return {
+      episodeType: 'Normal',
+      aid: episode.aid,
+      bvid: episode.bvid,
+      href: `https://www.bilibili.com/video/${episode.bvid}/`,
+      cover: episode.pic,
+      title: episode.title,
+      upName: episode.owner.name,
+      upUid: episode.owner.mid,
+      pubTime: episode.pubdate,
+    }
+  } else if (props.episodeType === 'NormalSeason') {
+    const episode = props.episode as EpInNormal
+    return {
+      episodeType: 'Normal',
+      aid: episode.aid,
+      bvid: episode.bvid,
+      href: `https://www.bilibili.com/video/${episode.bvid}/`,
+      cover: episode.arc.pic,
+      title: episode.arc.title,
+      upName: episode.arc.author.name,
+      upUid: episode.arc.author.mid,
+      pubTime: episode.arc.pubdate,
+    }
+  } else if (props.episodeType === 'Bangumi') {
+    const episode = props.episode as EpInBangumi
+    const searchResult = props.searchResult as BangumiSearchResult
+    return {
+      episodeType: 'Bangumi',
+      aid: episode.aid,
+      bvid: episode.bvid ?? undefined,
+      epId: episode.ep_id,
+      href:
+        episode.link_type === null
+          ? `https://www.bilibili.com/bangumi/play/ep${episode.ep_id}`
+          : `https://www.bilibili.com/video/${extractBvid(episode.link)}/`,
+      cover: episode.cover,
+      title: episode.show_title ?? episode.title,
+      upName: searchResult.info.up_info?.uname ?? '无',
+      upUid: searchResult.info.up_info?.mid ?? 0,
+      pubTime: episode.pub_time,
+    }
+  } else if (props.episodeType === 'Cheese') {
+    const episode = props.episode as EpInCheese
+    const searchResult = props.searchResult as CheeseSearchResult
+    return {
+      episodeType: 'Cheese',
+      aid: episode.aid,
+      epId: episode.id,
+      href: `https://www.bilibili.com/cheese/play/ep${episode.id}`,
+      cover: episode.cover,
+      title: episode.title,
+      upName: searchResult.info.up_info.uname,
+      upUid: searchResult.info.up_info.mid,
+      pubTime: episode.release_date,
+    }
+  } else if (props.episodeType === 'UserVideo') {
+    const episode = props.episode as EpInUserVideo
+    return {
+      episodeType: 'Normal',
+      aid: episode.aid,
+      bvid: episode.bvid,
+      href: `https://www.bilibili.com/video/${episode.bvid}/`,
+      cover: episode.pic,
+      title: episode.title,
+      upName: episode.author,
+      upUid: episode.mid,
+      pubTime: episode.created,
+    }
+  }
+  throw new Error(`错误的 episodeType: ${props.episodeType}`)
+})
+
+const partsButtonShowing = computed<boolean>(() => {
+  if (props.episodeType !== 'NormalSingle' && props.episodeType !== 'NormalSeason') {
+    return false
+  }
+  const episode = props.episode as NormalInfo | EpInNormal
+  return episode.pages.length > 1
+})
+
+function handlePartsButtonClick() {
+  if (props.episodeType !== 'NormalSingle' && props.episodeType !== 'NormalSeason') {
+    return
+  }
+
+  const episode = props.episode as NormalInfo | EpInNormal
+  const info = props.searchResult as NormalSearchResult
+
+  dialog.create({
+    title: '分P',
+    showIcon: false,
+    content: () => (
+      <PartsDialogContent
+        info={info}
+        pages={episode.pages}
+        episodeInfo={episodeInfo.value}
+        downloadButtonRef={navDownloadButtonRef?.value}
+      />
+    ),
+  })
+}
+
+async function handleDownloadClick() {
+  if (props.downloadEpisode === undefined) {
+    return
+  }
+
+  await props.downloadEpisode(episodeInfo.value)
+
+  playDownloadAnimation()
+}
+
+function playDownloadAnimation() {
+  if (rootDivRef.value === null) {
+    return
+  }
+
+  const from = downloadButtonRef.value?.$el
+  const to = navDownloadButtonRef?.value
+
+  if (from instanceof Element && to !== undefined && to !== null) {
+    if (isElementInViewport(rootDivRef.value)) {
+      // 只有卡片在视口内才播放动画
+      playTaskToQueueAnimation(from, to)
+    }
+  }
+}
+
+defineExpose({ playDownloadAnimation, episodeInfo })
+</script>
+
+<template>
+  <div
+    class="flex flex-col w-200px relative p-3 rounded-lg"
+    @contextmenu="() => handleContextMenu?.(episodeInfo)"
+    ref="rootDivRef">
+    <SimpleCheckbox
+      v-if="handleCheckboxClick !== undefined && checkboxChecked !== undefined"
+      class="absolute top-6 left-6 z-1 backdrop-blur-2"
+      :checked="checkboxChecked(episodeInfo)"
+      :on-click="() => handleCheckboxClick?.(episodeInfo)" />
+    <img
+      class="w-200px h-125px rounded-lg object-cover lazyload"
+      :data-src="`${ensureHttps(episodeInfo.cover)}@672w_378h_1c.webp`"
+      :key="episodeInfo.cover"
+      alt=""
+      draggable="false" />
+
+    <div class="w-full flex flex-col h-45px mt-2">
+      <span class="line-clamp-2" :title="episodeInfo.title">{{ episodeInfo.title }}</span>
+    </div>
+
+    <div class="flex items-center whitespace-nowrap text-gray text-12px w-full overflow-hidden">
+      <a
+        class="min-w-0 color-inherit no-underline hover:text-sky-5 mr-1"
+        :href="`https://space.bilibili.com/${episodeInfo.upUid}`"
+        target="_blank"
+        draggable="false">
+        <div class="truncate text-ellipsis" :title="episodeInfo.upName">{{ episodeInfo.upName }}</div>
+      </a>
+      <span v-if="episodeInfo.favTime !== undefined" class="ml-auto flex-shrink-0" title="收藏时间">
+        <n-time unix type="date" :time="episodeInfo.favTime" />
+      </span>
+      <span v-else-if="episodeInfo.pubTime !== 0" class="ml-auto flex-shrink-0" title="发布时间">
+        <n-time unix type="date" :time="episodeInfo.pubTime" />
+      </span>
+    </div>
+
+    <div class="flex gap-1 items-center">
+      <IconButton v-if="episodeInfo.href !== undefined" title="在浏览器中打开" :href="episodeInfo.href">
+        <PhGoogleChromeLogo :size="24" />
+      </IconButton>
+      <IconButton v-if="partsButtonShowing" title="查看分P" @click="handlePartsButtonClick">
+        <PhQueue :size="24" />
+      </IconButton>
+      <IconButton
+        v-if="search !== undefined && episodeInfo.bvid !== undefined"
+        title="在下载器内搜索"
+        @click="search(episodeInfo.bvid, 'Normal')">
+        <PhMagnifyingGlass :size="24" />
+      </IconButton>
+      <IconButton
+        v-if="downloadEpisode !== undefined"
+        ref="downloadButtonRef"
+        title="一键下载"
+        class="ml-auto"
+        @click="handleDownloadClick">
+        <PhDownloadSimple :size="24" />
+      </IconButton>
+    </div>
+  </div>
+</template>

@@ -1,3 +1,6 @@
+// 教学示例：演示泛型。
+#![allow(dead_code)]
+
 use std::collections::HashMap;
 
 // 泛型函数，用于打印任意类型的值
@@ -12,7 +15,7 @@ struct Pair<T, U> {
     second: U,
 }
 
-impl<T: std::fmt::Debug, U:std::fmt::Debug> Pair<T, U> {
+impl<T: std::fmt::Debug, U: std::fmt::Debug> Pair<T, U> {
     fn new(first: T, second: U) -> Self {
         Pair { first, second }
     }
@@ -24,19 +27,18 @@ impl<T: std::fmt::Debug, U:std::fmt::Debug> Pair<T, U> {
 
 pub fn show_generic() {
     let pair = Pair::new(42, "Rust");
-    pair.display();  // 输出: First: 42, Second: "Rust"
+    pair.display(); // 输出: First: 42, Second: "Rust"
 }
-pub fn method_generic(){
-        // 模拟 sync_matches 作为一个 HashMap，其中的值是一个 Vec<String>。
+pub fn method_generic() {
+    // 模拟 sync_matches 作为一个 HashMap，其中的值是一个 Vec<String>。
     let mut sync_matches = HashMap::new();
-    
+
     // 插入键值对，值是 Vec<String> 类型的列表。
     sync_matches.insert("search", vec!["rust", "programming", "language"]);
     sync_matches.insert("other_key", vec!["example", "value"]);
-    
+
     // 获取与 "search" 相关的多个值。
-    if let Some(packages) = sync_matches.get("search") {
-         
+    if let Some(_packages) = sync_matches.get("search") {
     } else {
         println!("No matches found for 'search'.");
     }

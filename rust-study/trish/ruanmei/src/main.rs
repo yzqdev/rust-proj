@@ -1,10 +1,10 @@
+use ratatui::Terminal;
+use ratatui::backend::CrosstermBackend;
 use ruanmei::app::{App, AppResult};
 use ruanmei::event::{Event, EventHandler};
 use ruanmei::handler::handle_key_events;
 use ruanmei::tui::Tui;
 use std::io;
-use ratatui::backend::CrosstermBackend;
-use ratatui::Terminal;
 
 fn main() -> AppResult<()> {
     let mut app = App::new("Ruanmei TUI App");

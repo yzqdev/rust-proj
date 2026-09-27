@@ -32,7 +32,7 @@ pub mod math_util {
         }
         let limit = (n as f64).sqrt() as u64;
         for i in 2..=limit {
-            if n % i == 0 {
+            if n.is_multiple_of(i) {
                 return false;
             }
         }
@@ -68,7 +68,9 @@ pub mod rand_util {
             .chars()
             .collect();
         let mut rng = rand::thread_rng();
-        (0..len).map(|_| chars[rng.gen_range(0..chars.len())]).collect()
+        (0..len)
+            .map(|_| chars[rng.gen_range(0..chars.len())])
+            .collect()
     }
 
     /// Generate a random number in range [min, max]

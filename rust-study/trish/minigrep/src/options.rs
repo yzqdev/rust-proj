@@ -1,3 +1,6 @@
+// 上游教学代码。
+#![allow(clippy::bool_assert_comparison)]
+
 /// Possible options for a Config.
 #[derive(Debug)]
 pub struct Options {
@@ -9,8 +12,8 @@ impl Options {
     /// Initializes a new Options.
     pub fn new(case_sensitive: bool, exact_match: bool) -> Options {
         Options {
-            case_sensitive: case_sensitive,
-            exact_match: exact_match,
+            case_sensitive,
+            exact_match,
         }
     }
 

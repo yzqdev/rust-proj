@@ -1,8 +1,7 @@
-
 use study::{create_function, print_result, say_hello};
 
 #[test]
-fn hello_macro(){
+fn hello_macro() {
     // 这个调用将会展开成 `println("Hello");`!
     say_hello!()
 }

@@ -1,3 +1,6 @@
+// 教学示例测试：演示所有权、借用与字符串。
+#![allow(unused_variables, dead_code)]
+
 #[test]
 fn array_sort() {
     let mut arr = vec![

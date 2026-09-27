@@ -1,5 +1,8 @@
-use std::error::Error;
+// 上游教学代码：保留原有断言风格。
+#![allow(clippy::bool_assert_comparison)]
+
 use super::error::*;
+use std::error::Error;
 
 use super::options::*;
 use std::fs::File;
@@ -34,7 +37,7 @@ impl Config {
                 _ => {
                     return Err(GenError::from(MinigrepError::new(
                         "Invalid option given. Allowed options are 'i' and 'w'.",
-                    )))
+                    )));
                 }
             }
         }
@@ -131,7 +134,7 @@ mod tests {
         let config = Config {
             options: Some(Options::new(true, false)),
             query,
-            file: file,
+            file,
         };
         let options_struct = Options::new(true, false);
 
@@ -145,7 +148,7 @@ mod tests {
         let config = Config {
             options: Some(Options::new(true, false)),
             query: String::from("query"),
-            file: file,
+            file,
         };
 
         assert_eq!(config.get_query(), "query");
