@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>rust-web · 任务看板</title>
+<style>
+  :root {
+    --bg: #f6f7f9;
+    --panel: #ffffff;
+    --border: #e4e7ec;
+    --text: #1a1d23;
+    --muted: #6b7280;
+    --accent: #3b6ef6;
+    --accent-soft: #e8eefe;
+    --danger: #dc2626;
+    --radius: 10px;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 3px rgba(16, 24, 40, .1);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14161a;
+      --panel: #1c1f26;
+      --border: #2c313a;
+      --text: #e8eaee;
+      --muted: #98a1b0;
+      --accent: #6b93ff;
+      --accent-soft: #23304d;
+      --danger: #f87171;
+      --shadow: 0 1px 2px rgba(0, 0, 0, .3);
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 28px 20px 64px;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.55 ui-sans-serif, system-ui, "Segoe UI", "Microsoft YaHei", sans-serif;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 18px; }
+  header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: -.01em; }
+  .meta { color: var(--muted); font-size: 12px; font-family: ui-monospace, Consolas, monospace; }
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 5px; }
+  .dot.down { background: var(--danger); }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+  }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 0 0 12px; }
+  .stats { display: flex; gap: 10px; flex-wrap: wrap; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent-soft); color: var(--accent);
+    border-radius: 999px; padding: 4px 12px; font-size: 12px; font-weight: 600;
+  }
+  .chip.neutral { background: var(--bg); color: var(--muted); }
+  .chip b { font-size: 13px; }
+  form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .field { display: grid; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  label { font-size: 12px; color: var(--muted); }
+  input, select, textarea, button {
+    font: inherit; color: inherit;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    width: 100%;
+  }
+  textarea { resize: vertical; min-height: 60px; }
+  input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  button {
+    cursor: pointer; background: var(--panel); width: auto;
+    transition: background .12s ease, border-color .12s ease;
+  }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary:hover { filter: brightness(1.06); }
+  button.danger { color: var(--danger); }
+  button.danger:hover { border-color: var(--danger); }
+  button.tiny { padding: 4px 9px; font-size: 12px; }
+  .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .toolbar .field { min-width: 130px; flex: 1 1 130px; }
+  .toolbar .grow { flex: 3 1 220px; }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .task {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    display: grid; gap: 8px;
+    background: var(--panel);
+  }
+  .task-top { display: flex; gap: 10px; align-items: flex-start; justify-content: space-between; }
+  .task-title { font-weight: 600; word-break: break-word; }
+  .task-title.done { text-decoration: line-through; color: var(--muted); }
+  .task-desc { color: var(--muted); font-size: 13px; white-space: pre-wrap; word-break: break-word; }
+  .task-foot { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pill { font-size: 11px; padding: 2px 9px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+  .pill[data-status="todo"] { color: #b45309; border-color: #f0c987; }
+  .pill[data-status="in_progress"] { color: var(--accent); border-color: var(--accent); }
+  .pill[data-status="done"] { color: #15803d; border-color: #9fd9b4; }
+  .pill[data-status="cancelled"] { color: var(--muted); }
+  .empty { color: var(--muted); text-align: center; padding: 28px 0; }
+  #toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(200%);
+    background: #b91c1c; color: #fff; padding: 10px 18px; border-radius: 999px;
+    font-size: 13px; box-shadow: var(--shadow); transition: transform .2s ease; max-width: 90vw;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>rust-web · 任务看板</h1>
+    <span class="meta"><span id="health-dot" class="dot"></span><span id="health-text">连接中…</span></span>
+  </header>
+
+  <section class="panel">
+    <h2>概览</h2>
+    <div class="stats" id="stats"><span class="chip neutral">加载中…</span></div>
+  </section>
+
+  <section class="panel">
+    <h2>新建任务</h2>
+    <form id="create-form">
+      <div class="field full">
+        <label for="title">标题 *</label>
+        <input id="title" name="title" maxlength="200" placeholder="要做什么？" required />
+      </div>
+      <div class="field full">
+        <label for="description">描述</label>
+        <textarea id="description" name="description" maxlength="2000" placeholder="可选"></textarea>
+      </div>
+      <div class="field">
+        <label for="status">状态</label>
+        <select id="status" name="status"></select>
+      </div>
+      <div class="field">
+        <label for="priority">优先级</label>
+        <select id="priority" name="priority"></select>
+      </div>
+      <div class="field">
+        <label for="due_at">截止时间</label>
+        <input id="due_at" name="due_at" type="datetime-local" />
+      </div>
+      <div class="field" style="align-content:end">
+        <button class="primary" type="submit">创建</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <h2>任务列表</h2>
+    <div class="toolbar" style="margin-bottom:14px">
+      <div class="field">
+        <label for="filter-status">状态筛选</label>
+        <select id="filter-status"></select>
+      </div>
+      <div class="field grow">
+        <label for="filter-q">关键字</label>
+        <input id="filter-q" placeholder="匹配标题或描述" />
+      </div>
+      <div class="field">
+        <label for="filter-limit">每页</label>
+        <select id="filter-limit">
+          <option>5</option><option selected>20</option><option>50</option><option>100</option>
+        </select>
+      </div>
+      <div class="field">
+        <button id="refresh" type="button">刷新</button>
+      </div>
+    </div>
+    <ul id="task-list"></ul>
+    <div id="empty" class="empty" hidden>没有匹配的任务</div>
+  </section>
+</div>
+<div id="toast"></div>
+
+<script>
+const STATUSES = [
+  { value: 'todo',        label: '待办' },
+  { value: 'in_progress', label: '进行中' },
+  { value: 'done',        label: '已完成' },
+  { value: 'cancelled',   label: '已取消' },
+];
+const PRIORITIES = [
+  { value: 0, label: '0 · 最低' },
+  { value: 1, label: '1 · 低' },
+  { value: 2, label: '2 · 中' },
+  { value: 3, label: '3 · 高' },
+  { value: 4, label: '4 · 紧急' },
+];
+const NEXT_STATUS = { todo: 'in_progress', in_progress: 'done', done: 'todo', cancelled: 'todo' };
+const API = '/api/v1';
+
+const $ = (id) => document.getElementById(id);
+const statusLabel = (v) => (STATUSES.find((s) => s.value === v) || { label: v }).label;
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+  ));
+}
+
+function fillSelects() {
+  const options = STATUSES.map((s) => `<option value="${s.value}">${s.label}</option>`).join('');
+  $('status').innerHTML = options;
+  $('filter-status').innerHTML = '<option value="">全部状态</option>' + options;
+  $('priority').innerHTML = PRIORITIES.map((p) => `<option value="${p.value}">${p.label}</option>`).join('');
+  $('priority').value = '2';
+}
+
+async function api(path, options = {}) {
+  const response = await fetch(API + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options,
+  });
+  if (response.status === 204) return null;
+
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    throw new Error(body?.error?.message || `请求失败 (${response.status})`);
+  }
+  return body;
+}
+
+let toastTimer;
+function toast(message) {
+  const el = $('toast');
+  el.textContent = message;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3600);
+}
+
+async function loadHealth() {
+  try {
+    const response = await fetch('/health');   // 存活探针在根路径，不在 /api/v1 下
+    if (!response.ok) throw new Error('unhealthy');
+    const health = await response.json();
+    $('health-dot').classList.remove('down');
+    $('health-text').textContent = `v${health.version} · 在线 ${health.uptime_seconds}s`;
+  } catch {
+    $('health-dot').classList.add('down');
+    $('health-text').textContent = '服务不可用';
+  }
+}
+
+async function loadStats() {
+  const stats = await api('/stats');
+  const chips = [`<span class="chip neutral">总计 <b>${stats.total}</b></span>`];
+  for (const item of stats.by_status) {
+    chips.push(`<span class="chip" data-status="${item.status}">${statusLabel(item.status)} <b>${item.count}</b></span>`);
+  }
+  $('stats').innerHTML = chips.join('');
+}
+
+function renderTask(task) {
+  const due = task.due_at ? `截止 ${new Date(task.due_at).toLocaleString()}` : '无截止时间';
+  const done = task.status === 'done' ? ' done' : '';
+
+  const li = document.createElement('li');
+  li.className = 'task';
+  li.innerHTML = `
+    <div class="task-top">
+      <div>
+        <div class="task-title${done}">${escapeHtml(task.title)}</div>
+        ${task.description ? `<div class="task-desc">${escapeHtml(task.description)}</div>` : ''}
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="tiny" data-act="advance">推进</button>
+        <button class="tiny danger" data-act="delete">删除</button>
+      </div>
+    </div>
+    <div class="task-foot">
+      <span class="pill" data-status="${task.status}">${statusLabel(task.status)}</span>
+      <span class="pill">优先级 ${task.priority}</span>
+      <span class="pill">${escapeHtml(due)}</span>
+      <span class="pill">${new Date(task.created_at).toLocaleString()}</span>
+    </div>`;
+
+  li.querySelector('[data-act="advance"]').addEventListener('click', () => advance(task));
+  li.querySelector('[data-act="delete"]').addEventListener('click', () => remove(task));
+  return li;
+}
+
+async function loadTasks() {
+  const params = new URLSearchParams({ limit: $('filter-limit').value });
+  if ($('filter-status').value) params.set('status', $('filter-status').value);
+  if ($('filter-q').value.trim()) params.set('q', $('filter-q').value.trim());
+
+  const page = await api('/tasks?' + params.toString());
+  const list = $('task-list');
+  list.replaceChildren(...page.items.map(renderTask));
+  $('empty').hidden = page.items.length > 0;
+}
+
+async function refresh() {
+  try {
+    await Promise.all([loadTasks(), loadStats(), loadHealth()]);
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+async function advance(task) {
+  try {
+    await api(`/tasks/${task.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status: NEXT_STATUS[task.status] || 'todo' }),
+    });
+    await refresh();
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+async function remove(task) {
+  if (!confirm(`删除「${task.title}」？`)) return;
+  try {
+    await api(`/tasks/${task.id}`, { method: 'DELETE' });
+    await refresh();
+  } catch (error) {
+    toast(error.message);
+  }
+}
+
+$('create-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const payload = {
+    title: $('title').value,
+    status: $('status').value,
+    priority: Number($('priority').value),
+  };
+  const description = $('description').value.trim();
+  if (description) payload.description = description;
+  const dueAt = $('due_at').value;
+  if (dueAt) payload.due_at = new Date(dueAt).toISOString();
+
+  try {
+    await api('/tasks', { method: 'POST', body: JSON.stringify(payload) });
+    event.target.reset();
+    $('priority').value = '2';
+    await refresh();
+  } catch (error) {
+    toast(error.message);
+  }
+});
+
+$('refresh').addEventListener('click', refresh);
+$('filter-status').addEventListener('change', refresh);
+$('filter-limit').addEventListener('change', refresh);
+
+let searchTimer;
+$('filter-q').addEventListener('input', () => {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(refresh, 280);
+});
+
+fillSelects();
+refresh();
+setInterval(loadHealth, 15000);
+</script>
+</body>
+</html>
